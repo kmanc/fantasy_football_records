@@ -1,0 +1,10 @@
+# Directories
+past_years/*
+!past_years/.gitkeep
+records/*
+!records/.gitkeep
+venv/
+.idea/
+
+# Files
+config.ini
