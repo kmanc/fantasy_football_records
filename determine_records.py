@@ -10,7 +10,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 config.read(f'{dir_path}/config.ini')
 
 
-first_year = int(config["ESPN"]["founded"])
+first_year = int(config["ESPN"]["league_founded"])
 current_year = date.today().year
 champ_list = []
 playoff_appearances = []

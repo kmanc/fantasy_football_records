@@ -10,8 +10,8 @@ config.read(f'{dir_path}/config.ini')
 
 s2 = config["ESPN"]["s2"]
 swid = config["ESPN"]["swid"]
-league_id = int(config["ESPN"]["league"])
-first_year = int(config["ESPN"]["founded"])
+league_id = int(config["ESPN"]["league_id"])
+first_year = int(config["ESPN"]["league_founded"])
 
 current_year = date.today().year
 home_game_result_transform = {
