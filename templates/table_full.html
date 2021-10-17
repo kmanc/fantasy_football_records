@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Team Owner</th>
+        <th>Team Name</th>
+        <th>Year</th>
+        <th>Week</th>
+        <th>Points</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+        <tr>
+          <td>{{ record.owner }}</td>
+          <td>{{ record.team }}</td>
+          <td>{{ record.year }}</td>
+          <td>{{ record.week.split(" ")[-1] }}</td>
+          <td>{{ "%.2f"|format(record.value|float) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

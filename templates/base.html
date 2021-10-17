@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+        .footer {
+           position: fixed;
+           left: 0;
+           bottom: 0;
+           width: 100%;
+           color: black;
+           text-align: center;
+        }
+        </style>
+        <title>{{ title_prefix }}: {{ record_name }}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            <h1>{{ record_name }}</h1>
+            <hr>
+            {% block content %}{% endblock %}
+        </div>
+        {% block scripts %}{% endblock %}
+    </body>
+    <div class="footer">
+        <p>Author: Kevin Conley</p>
+        <p><a href="https://github.com/kmanc/fantasy_football_records">Updated weekly by fantasy_football_records</a></p>
+    </div>
+</html>
