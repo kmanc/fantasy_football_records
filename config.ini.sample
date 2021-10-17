@@ -1,5 +1,9 @@
 [ESPN]
 s2 = "LONG_ESPN_S2_STRING"
 swid = "{ESPN_SWID}"
-league = LEAGUE_ID
-founded = FIRST_YEAR_LEAGUE_STARTED
+league_id = LEAGUE_ID
+league_founded = FIRST_YEAR_LEAGUE_STARTED
+
+[WEBSITE]
+league_name = "LEAGUE_NAME"
+league_abbreviation = "LEAGUE_ABBR"
