@@ -18,6 +18,8 @@ Bootstrap(app)
 @app.route("/")
 def index():
     return render_template('index.html',
+                           title_prefix=league_abbreviation,
+                           record_name="Home",
                            welcome_message=f"Welcome to the {league_name} online record book")
 
 
@@ -126,4 +128,7 @@ def highest_losses():
 
 
 if __name__ == "__main__":
+    # For testing
     app.run(debug=True)
+    # For real
+    #app.run(host="0.0.0.0")
