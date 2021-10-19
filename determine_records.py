@@ -20,6 +20,38 @@ all_wins = {}
 all_losses = {}
 yearly_totals = {}
 single_regular_season = {}
+active_tracker = {}
+
+
+for year in range(first_year, current_year + 1):
+	try:
+		with open(f"past_years/{year}.json") as f:
+			file_data = json.loads(f.read())
+			active_tracker[year] = []
+			for owner in file_data.keys():
+				active_tracker[year].append(owner)
+	except FileNotFoundError:
+		pass
+
+max_tracked = max(active_tracker.keys())
+current_owners = active_tracker[max_tracked]
+
+for year in range(first_year, current_year + 1):
+	try:
+		with open(f"past_years/{year}.json", "r") as f:
+			file_data = json.loads(f.read())
+			changes = {}
+			for owner in file_data.keys():
+				if owner not in current_owners and "retired" not in owner:
+					owner_min = min(year for year, owner_list in active_tracker.items() if owner in owner_list)
+					owner_max = max(year for year, owner_list in active_tracker.items() if owner in owner_list)
+					changes[owner] = f"{owner} (retired: {owner_min}-{owner_max})"
+			for old_key, new_key in changes.items():
+				file_data[new_key] = file_data.pop(old_key)
+		with open(f"past_years/{year}.json", "w") as f:
+			f.write(json.dumps(file_data))
+	except FileNotFoundError:
+		pass
 
 
 def is_champ(owner_data, data_year):
@@ -33,8 +65,9 @@ def in_playoffs(owner_data, data_year):
 	if data_year == 2014 or data_year > 2020:
 		if owner_data.get("week_15"):
 			return True
-	if owner_data.get("week_14"):
-		return True
+	else:
+		if owner_data.get("week_14"):
+			return True
 
 
 def win_counts(owner_data):
@@ -138,7 +171,7 @@ for owner, years_data in yearly_totals.items():
 with open("records/championships.json", "w") as f:
 	champs = []
 	champs_count = Counter(champ_list)
-	most_champs = heapq.nlargest(10, champs_count, key=champs_count.get)
+	most_champs = heapq.nlargest(len(champs_count), champs_count, key=champs_count.get)
 	for owner in most_champs:
 		champs.append({"owner": owner, "value": champs_count.get(owner)})
 	f.write(json.dumps(champs))
@@ -147,7 +180,7 @@ with open("records/championships.json", "w") as f:
 with open("records/playoff_appearances.json", "w") as f:
 	playoffs = []
 	playoffs_count = Counter(playoff_appearances)
-	most_playoffs = heapq.nlargest(10, playoffs_count, key=playoffs_count.get)
+	most_playoffs = heapq.nlargest(len(playoffs_count), playoffs_count, key=playoffs_count.get)
 	for owner in most_playoffs:
 		playoffs.append({"owner": owner, "value": playoffs_count.get(owner)})
 	f.write(json.dumps(playoffs))
@@ -199,11 +232,22 @@ with open("records/lowest_wins.json", "w") as f:
 	f.write(json.dumps(actual_lowest))
 
 
+with open("records/total_regular_season_points.json", "w") as f:
+	all_time_rs_points = {}
+	for owner, seasons in yearly_totals.items():
+		all_time_rs_points[owner] = sum(season.get("regular_season") for season in seasons.values())
+	highest_all_time_points = heapq.nlargest(len(all_time_rs_points), all_time_rs_points, key=all_time_rs_points.get)
+	actual_highest = []
+	for key in highest_all_time_points:
+		actual_highest.append({"owner": key, "value": all_time_rs_points.get(key)})
+	f.write(json.dumps(actual_highest))
+
+
 with open("records/total_points.json", "w") as f:
 	all_time_points = {}
 	for owner, seasons in yearly_totals.items():
 		all_time_points[owner] = sum(season.get("total") for season in seasons.values())
-	highest_all_time_points = heapq.nlargest(10, all_time_points, key=all_time_points.get)
+	highest_all_time_points = heapq.nlargest(len(all_time_points), all_time_points, key=all_time_points.get)
 	actual_highest = []
 	for key in highest_all_time_points:
 		actual_highest.append({"owner": key, "value": all_time_points.get(key)})
