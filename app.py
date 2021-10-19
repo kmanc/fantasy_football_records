@@ -33,6 +33,18 @@ def championships():
                            record_name="Championships")
 
 
+@app.route("/total_regular_season_points")
+def total_regular_season_points():
+    with open("records/total_regular_season_points.json") as f:
+        records = json.load(f)
+    for record in records:
+        record['value'] = round(record.get("value"), 2)
+    return render_template('table_minimal.html',
+                           records=records,
+                           title_prefix=league_abbreviation,
+                           record_name="All time regular season points")
+
+
 @app.route("/total_points")
 def total_points():
     with open("records/total_points.json") as f:
@@ -52,7 +64,7 @@ def win_percents():
     for record in records:
         record['value'] = f"{str(round(record.get('value'), 3) * 100)[:4]}%"
     return render_template('table_minimal.html',
-                           records=records[:10],
+                           records=records,
                            title_prefix=league_abbreviation,
                            record_name="Win percentage")
 
