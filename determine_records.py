@@ -99,7 +99,8 @@ def flatten_all(owner_name, owner_data, data_year):
 
 
 def calculate_percent(in_dict):
-	return in_dict.get("wins") / in_dict.get("games")
+	decimal = in_dict.get("wins") / in_dict.get("games")
+	return f"{round(decimal * 100, 2)}%"
 
 
 def process_key(combined_key):
@@ -256,7 +257,7 @@ with open("records/highest_regular_seasons.json", "w") as f:
 		record_owner = record_holder.get("owner")
 		record_year = record_holder.get("year")
 		record_team = record_holder.get("team_name")
-		actual_highest.append({"owner": record_owner, "value": key, "year": record_year, "team": record_team})
+		actual_highest.append({"owner": record_owner, "value": round(key, 2), "year": record_year, "team": record_team})
 	f.write(json.dumps(actual_highest))
 
 with open("records/lowest_regular_seasons.json", "w") as f:
@@ -267,5 +268,5 @@ with open("records/lowest_regular_seasons.json", "w") as f:
 		record_owner = record_holder.get("owner")
 		record_year = record_holder.get("year")
 		record_team = record_holder.get("team_name")
-		actual_lowest.append({"owner": record_owner, "value": key, "year": record_year, "team": record_team})
+		actual_lowest.append({"owner": record_owner, "value": round(key, 2), "year": record_year, "team": record_team})
 	f.write(json.dumps(actual_lowest))
