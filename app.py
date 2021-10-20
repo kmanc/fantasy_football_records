@@ -61,8 +61,6 @@ def total_points():
 def win_percents():
     with open("records/win_percents.json") as f:
         records = json.load(f)
-    for record in records:
-        record['value'] = f"{str(round(record.get('value'), 3) * 100)[:4]}%"
     return render_template('table_minimal.html',
                            records=records,
                            title_prefix=league_abbreviation,
