@@ -36,10 +36,13 @@ def process_year(league_year):
 	for team in league.teams:
 		owners_to_teams_dict[team.owner.title()] = team.team_name.replace("  ", " ").strip()
 
-	owners_to_weeks_dict = {}
+	ff_year_dict = {
+		"championship_week": weeks_this_year,
+		"first_playoff_week": league.settings.reg_season_count + 1
+	}
 	for owner, team_name in owners_to_teams_dict.items():
-		owners_to_weeks_dict[owner] = {}
-		owners_to_weeks_dict[owner][f"team_name"] = team_name
+		ff_year_dict[owner] = {}
+		ff_year_dict[owner][f"team_name"] = team_name
 	for week in range(1, max_week + 1):
 		scoreboard = league.scoreboard(week)
 		# Week hasn't happened yet
@@ -59,7 +62,7 @@ def process_year(league_year):
 				skip_away = True
 
 			# Home team score and win result
-			owners_to_weeks_dict[matchup.home_team.owner.title()][f"week_{week}"] = {
+			ff_year_dict[matchup.home_team.owner.title()][f"week_{week}"] = {
 				"score": matchup.home_score,
 				"result": home_game_result_transform.get(game_result)
 			}
@@ -69,12 +72,12 @@ def process_year(league_year):
 				continue
 
 			# Away team score and win result
-			owners_to_weeks_dict[matchup.away_team.owner.title()][f"week_{week}"] = {
+			ff_year_dict[matchup.away_team.owner.title()][f"week_{week}"] = {
 				"score": matchup.away_score,
 				"result": away_game_result_transform.get(game_result)
 			}
 
-	return owners_to_weeks_dict
+	return ff_year_dict
 
 
 def main():
