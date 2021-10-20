@@ -100,7 +100,7 @@ def flatten_all(owner_name, owner_data, data_year):
 
 def calculate_percent(in_dict):
 	decimal = in_dict.get("wins") / in_dict.get("games")
-	return f"{round(decimal * 100, 2)}%"
+	return round(decimal * 100, 2)
 
 
 def process_key(combined_key):

@@ -64,7 +64,8 @@ def win_percents():
     return render_template('table_minimal.html',
                            records=records,
                            title_prefix=league_abbreviation,
-                           record_name="Win percentage")
+                           record_name="Win percentage",
+                           percent="%")
 
 
 @app.route("/playoff_appearances")
