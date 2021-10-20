@@ -54,20 +54,14 @@ for year in range(first_year, current_year + 1):
 		pass
 
 
-def is_champ(owner_data, data_year):
-	if data_year <= 2020 and owner_data.get("week_16", {}).get("result") == "win":
-		return True
-	if owner_data.get("week_17", {}).get("result") == "win":
+def is_champ(owner_data, week):
+	if owner_data.get(f"week_{week}", {}).get("result") == "win":
 		return True
 
 
-def in_playoffs(owner_data, data_year):
-	if data_year == 2014 or data_year > 2020:
-		if owner_data.get("week_15"):
-			return True
-	else:
-		if owner_data.get("week_14"):
-			return True
+def in_playoffs(owner_data, week):
+	if owner_data.get(f"week_{week}"):
+		return True
 
 
 def win_counts(owner_data):
@@ -105,7 +99,8 @@ def flatten_all(owner_name, owner_data, data_year):
 
 
 def calculate_percent(in_dict):
-	return in_dict.get("wins") / in_dict.get("games")
+	decimal = in_dict.get("wins") / in_dict.get("games")
+	return round(decimal * 100, 2)
 
 
 def process_key(combined_key):
@@ -113,17 +108,14 @@ def process_key(combined_key):
 	return {"owner": split_key[0], "team": split_key[1], "year": split_key[2], "week": split_key[3]}
 
 
-def sum_points(owner_data, data_year):
+def sum_points(owner_data, last_regular_week):
 	total_points = []
 	regular_season_points = []
 	for week, game in owner_data.items():
 		if "week" in week:
 			total_points.append(game.get("score"))
-			regular_season_end = 13
-			if data_year == 2014 or data_year > 2020:
-				regular_season_end = 14
 			this_week = int(week.split("_")[-1])
-			if "week" in week and this_week <= regular_season_end:
+			if "week" in week and this_week <= last_regular_week:
 				regular_season_points.append(game.get("score"))
 
 	total_points = sum(total_points)
@@ -137,12 +129,15 @@ for year in range(first_year, current_year + 1):
 	try:
 		with open(f"past_years/{year}.json") as f:
 			file_data = json.loads(f.read())
+			championship_week = file_data.pop("championship_week")
+			playoff_cutoff = file_data.pop("first_playoff_week")
+			regular_season_end = playoff_cutoff - 1
 			for owner, data in file_data.items():
-				if is_champ(data, year):
+				if is_champ(data, championship_week):
 					champ_list.append(owner)
-				if in_playoffs(data, year):
+				if in_playoffs(data, playoff_cutoff):
 					playoff_appearances.append(owner)
-				tot_points, reg_points, play_points = sum_points(data, year)
+				tot_points, reg_points, play_points = sum_points(data, regular_season_end)
 				if owner in yearly_totals:
 					yearly_totals[owner][year] = {"total": tot_points, "regular_season": reg_points, "playoff": play_points, "name": data.get("team_name")}
 				else:
@@ -262,7 +257,7 @@ with open("records/highest_regular_seasons.json", "w") as f:
 		record_owner = record_holder.get("owner")
 		record_year = record_holder.get("year")
 		record_team = record_holder.get("team_name")
-		actual_highest.append({"owner": record_owner, "value": key, "year": record_year, "team": record_team})
+		actual_highest.append({"owner": record_owner, "value": round(key, 2), "year": record_year, "team": record_team})
 	f.write(json.dumps(actual_highest))
 
 with open("records/lowest_regular_seasons.json", "w") as f:
@@ -273,5 +268,5 @@ with open("records/lowest_regular_seasons.json", "w") as f:
 		record_owner = record_holder.get("owner")
 		record_year = record_holder.get("year")
 		record_team = record_holder.get("team_name")
-		actual_lowest.append({"owner": record_owner, "value": key, "year": record_year, "team": record_team})
+		actual_lowest.append({"owner": record_owner, "value": round(key, 2), "year": record_year, "team": record_team})
 	f.write(json.dumps(actual_lowest))

@@ -18,7 +18,7 @@
           <td>{{ record.team }}</td>
           <td>{{ record.year }}</td>
           <td>{{ record.week.split(" ")[-1] }}</td>
-          <td>{{ "%.2f"|format(record.value|float) }}</td>
+          <td>{{ "{:,}".format(record.value) }}</td>
         </tr>
       {% endfor %}
     </tbody>
