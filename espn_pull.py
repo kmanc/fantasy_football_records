@@ -83,17 +83,15 @@ def process_year(league_year):
 
 
 def main():
-	cached_years = []
 	for year in range(first_year, current_year + 1):
 		try:
 			with open(f"past_years/{year}.json") as f:
 				file_data = json.loads(f.read())
 				if file_data.get("season_complete"):
-					cached_years.append(str(year))
+					print(f"{year}'s season already saved")
 					continue
 		except FileNotFoundError:
 			pass
-		print(f"{', '.join(cached_years[:-1])}, and {cached_years[-1]} are already saved")
 		print(f"Working on {year}")
 		ff_year = process_year(league_year=year)
 		with open(f"past_years/{year}.json", "w") as f:
