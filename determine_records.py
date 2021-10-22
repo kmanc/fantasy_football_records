@@ -131,6 +131,7 @@ for year in range(first_year, current_year + 1):
 			file_data = json.loads(f.read())
 			championship_week = file_data.pop("championship_week")
 			playoff_cutoff = file_data.pop("first_playoff_week")
+			file_data.pop("season_complete")
 			regular_season_end = playoff_cutoff - 1
 			for owner, data in file_data.items():
 				if is_champ(data, championship_week):
