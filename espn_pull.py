@@ -31,6 +31,7 @@ def process_year(league_year):
 	weeks_this_year = len(league.settings.matchup_periods)
 	current_week = league.current_week
 	max_week = min(weeks_this_year, current_week)
+	season_complete = weeks_this_year == current_week
 
 	owners_to_teams_dict = {}
 	for team in league.teams:
@@ -38,7 +39,8 @@ def process_year(league_year):
 
 	ff_year_dict = {
 		"championship_week": weeks_this_year,
-		"first_playoff_week": league.settings.reg_season_count + 1
+		"first_playoff_week": league.settings.reg_season_count + 1,
+		"season_complete": season_complete
 	}
 	for owner, team_name in owners_to_teams_dict.items():
 		ff_year_dict[owner] = {}
@@ -81,27 +83,23 @@ def process_year(league_year):
 
 
 def main():
+	cached_years = []
 	for year in range(first_year, current_year + 1):
 		try:
 			with open(f"past_years/{year}.json") as f:
 				file_data = json.loads(f.read())
-				weeks_there = set()
-				for key, value in file_data.items():
-					if key in ["championship_week", "first_playoff_week"]:
-						continue
-					weeks_there.update(value.keys())
-				if "week_16" in weeks_there and year <= 2020:
-					print(f"{year} already stored locally")
-					continue
-				elif "week_17" in weeks_there and year > 2020:
-					print(f"{year} already stored locally")
+				if file_data.get("season_complete"):
+					cached_years.append(str(year))
 					continue
 		except FileNotFoundError:
 			pass
+		print(f"{', '.join(cached_years[:-1])}, and {cached_years[-1]} are already saved")
 		print(f"Working on {year}")
 		ff_year = process_year(league_year=year)
 		with open(f"past_years/{year}.json", "w") as f:
 			f.write(json.dumps(ff_year))
+		if not ff_year.get("season_complete"):
+			break
 
 
 if __name__ == "__main__":
