@@ -87,6 +87,8 @@ def main():
 				file_data = json.loads(f.read())
 				weeks_there = set()
 				for key, value in file_data.items():
+					if key in ["championship_week", "first_playoff_week"]:
+						continue
 					weeks_there.update(value.keys())
 				if "week_16" in weeks_there and year <= 2020:
 					print(f"{year} already stored locally")
