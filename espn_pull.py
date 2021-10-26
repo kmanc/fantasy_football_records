@@ -85,7 +85,7 @@ def process_year(league_year):
 def main():
 	for year in range(first_year, current_year + 1):
 		try:
-			with open(f"past_years/{year}.json") as f:
+			with open(f"{dir_path}/past_years/{year}.json") as f:
 				file_data = json.loads(f.read())
 				if file_data.get("season_complete"):
 					print(f"{year}'s season already saved")
@@ -94,7 +94,7 @@ def main():
 			pass
 		print(f"Working on {year}")
 		ff_year = process_year(league_year=year)
-		with open(f"past_years/{year}.json", "w") as f:
+		with open(f"{dir_path}/past_years/{year}.json", "w") as f:
 			f.write(json.dumps(ff_year))
 		if not ff_year.get("season_complete"):
 			break
