@@ -25,7 +25,7 @@ active_tracker = {}
 
 for year in range(first_year, current_year + 1):
 	try:
-		with open(f"past_years/{year}.json") as f:
+		with open(f"{dir_path}/past_years/{year}.json") as f:
 			file_data = json.loads(f.read())
 			active_tracker[year] = []
 			for owner in file_data.keys():
@@ -38,7 +38,7 @@ current_owners = active_tracker[max_tracked]
 
 for year in range(first_year, current_year + 1):
 	try:
-		with open(f"past_years/{year}.json", "r") as f:
+		with open(f"{dir_path}/past_years/{year}.json", "r") as f:
 			file_data = json.loads(f.read())
 			changes = {}
 			for owner in file_data.keys():
@@ -48,7 +48,7 @@ for year in range(first_year, current_year + 1):
 					changes[owner] = f"{owner} (retired: {owner_min}-{owner_max})"
 			for old_key, new_key in changes.items():
 				file_data[new_key] = file_data.pop(old_key)
-		with open(f"past_years/{year}.json", "w") as f:
+		with open(f"{dir_path}/past_years/{year}.json", "w") as f:
 			f.write(json.dumps(file_data))
 	except FileNotFoundError:
 		pass
@@ -127,7 +127,7 @@ def sum_points(owner_data, last_regular_week):
 
 for year in range(first_year, current_year + 1):
 	try:
-		with open(f"past_years/{year}.json") as f:
+		with open(f"{dir_path}/past_years/{year}.json") as f:
 			file_data = json.loads(f.read())
 			championship_week = file_data.pop("championship_week")
 			playoff_cutoff = file_data.pop("first_playoff_week")
@@ -164,7 +164,7 @@ for owner, years_data in yearly_totals.items():
 		single_regular_season[year_data.get("regular_season")] = {"year": year, "owner": owner, "team_name": year_data.get("name")}
 
 
-with open("records/championships.json", "w") as f:
+with open(f"{dir_path}/records/championships.json", "w") as f:
 	champs = []
 	champs_count = Counter(champ_list)
 	most_champs = heapq.nlargest(len(champs_count), champs_count, key=champs_count.get)
@@ -173,7 +173,7 @@ with open("records/championships.json", "w") as f:
 	f.write(json.dumps(champs))
 
 
-with open("records/playoff_appearances.json", "w") as f:
+with open(f"{dir_path}/records/playoff_appearances.json", "w") as f:
 	playoffs = []
 	playoffs_count = Counter(playoff_appearances)
 	most_playoffs = heapq.nlargest(len(playoffs_count), playoffs_count, key=playoffs_count.get)
@@ -182,13 +182,13 @@ with open("records/playoff_appearances.json", "w") as f:
 	f.write(json.dumps(playoffs))
 
 
-with open("records/win_percents.json", "w") as f:
+with open(f"{dir_path}/records/win_percents.json", "w") as f:
 	ordered = sorted(win_percents, key=lambda x: calculate_percent(win_percents.get(x)), reverse=True)
 	actual_percents = [{"owner": name, "value": calculate_percent(win_percents.get(name))} for name in ordered]
 	f.write(json.dumps(actual_percents))
 
 
-with open("records/highest_weeks.json", "w") as f:
+with open(f"{dir_path}/records/highest_weeks.json", "w") as f:
 	highest_weeks = heapq.nlargest(10, all_games, key=all_games.get)
 	actual_highest = []
 	for key in highest_weeks:
@@ -198,7 +198,7 @@ with open("records/highest_weeks.json", "w") as f:
 	f.write(json.dumps(actual_highest))
 
 
-with open("records/lowest_weeks.json", "w") as f:
+with open(f"{dir_path}/records/lowest_weeks.json", "w") as f:
 	lowest_weeks = heapq.nsmallest(10, all_games, key=all_games.get)
 	actual_lowest = []
 	for key in lowest_weeks:
@@ -208,7 +208,7 @@ with open("records/lowest_weeks.json", "w") as f:
 	f.write(json.dumps(actual_lowest))
 
 
-with open("records/highest_losses.json", "w") as f:
+with open(f"{dir_path}/records/highest_losses.json", "w") as f:
 	highest_losses = heapq.nlargest(10, all_losses, key=all_losses.get)
 	actual_highest = []
 	for key in highest_losses:
@@ -218,7 +218,7 @@ with open("records/highest_losses.json", "w") as f:
 	f.write(json.dumps(actual_highest))
 
 
-with open("records/lowest_wins.json", "w") as f:
+with open(f"{dir_path}/records/lowest_wins.json", "w") as f:
 	lowest_wins = heapq.nsmallest(10, all_wins, key=all_wins.get)
 	actual_lowest = []
 	for key in lowest_wins:
@@ -228,7 +228,7 @@ with open("records/lowest_wins.json", "w") as f:
 	f.write(json.dumps(actual_lowest))
 
 
-with open("records/total_regular_season_points.json", "w") as f:
+with open(f"{dir_path}/records/total_regular_season_points.json", "w") as f:
 	all_time_rs_points = {}
 	for owner, seasons in yearly_totals.items():
 		all_time_rs_points[owner] = sum(season.get("regular_season") for season in seasons.values())
@@ -239,7 +239,7 @@ with open("records/total_regular_season_points.json", "w") as f:
 	f.write(json.dumps(actual_highest))
 
 
-with open("records/total_points.json", "w") as f:
+with open(f"{dir_path}/records/total_points.json", "w") as f:
 	all_time_points = {}
 	for owner, seasons in yearly_totals.items():
 		all_time_points[owner] = sum(season.get("total") for season in seasons.values())
@@ -250,7 +250,7 @@ with open("records/total_points.json", "w") as f:
 	f.write(json.dumps(actual_highest))
 
 
-with open("records/highest_regular_seasons.json", "w") as f:
+with open(f"{dir_path}/records/highest_regular_seasons.json", "w") as f:
 	highest_seasons = heapq.nlargest(10, single_regular_season)
 	actual_highest = []
 	for key in highest_seasons:
@@ -261,7 +261,7 @@ with open("records/highest_regular_seasons.json", "w") as f:
 		actual_highest.append({"owner": record_owner, "value": round(key, 2), "year": record_year, "team": record_team})
 	f.write(json.dumps(actual_highest))
 
-with open("records/lowest_regular_seasons.json", "w") as f:
+with open(f"{dir_path}/records/lowest_regular_seasons.json", "w") as f:
 	lowest_seasons = heapq.nsmallest(10, single_regular_season)
 	actual_lowest = []
 	for key in lowest_seasons:
