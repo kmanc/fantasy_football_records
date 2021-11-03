@@ -11,7 +11,7 @@
     <tbody>
       {% for record in records %}
         <tr>
-          <td>{{ record.owner }}</td>
+          <td>{{ record.owner_name }}</td>
           <td>{{ "{:,}".format(record.value) + (percent or "") }}</td>
         </tr>
       {% endfor %}
