@@ -14,10 +14,10 @@
     <tbody>
       {% for record in records %}
         <tr>
-          <td>{{ record.owner }}</td>
-          <td>{{ record.team }}</td>
+          <td>{{ record.owner_name }}</td>
+          <td>{{ record.team_name }}</td>
           <td>{{ record.year }}</td>
-          <td>{{ record.week.split(" ")[-1] }}</td>
+          <td>{{ record.week }}</td>
           <td>{{ "{:,}".format(record.value) }}</td>
         </tr>
       {% endfor %}
