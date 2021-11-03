@@ -9,6 +9,7 @@ class Owner:
 	teams: dict
 
 	def matchup_by_type_generator(self, game_type=None):
+		""" Yields any matchup with the given game type (or all matchups) """
 		for years_matchups in self.matchups.values():
 			for matchup in years_matchups:
 				if game_type is None:
@@ -17,15 +18,19 @@ class Owner:
 					yield matchup
 
 	def calculate_championship_wins(self):
+		""" Returns the number of championships the owner has won """
 		return sum(matchup[-1].type.name == "PLAYOFF" and matchup[-1].outcome.name == "WIN" for matchup in self.matchups.values())
 
 	def calculate_lifetime_playoff_points(self):
+		""" Returns the total points the owner has scored in playoff games """
 		return sum(matchup.score for matchup in self.matchup_by_type_generator("PLAYOFF"))
 
 	def calculate_lifetime_regular_season_points(self):
+		""" Returns the total points the owner has scored in regular season games """
 		return sum(matchup.score for matchup in self.matchup_by_type_generator("REGULAR_SEASON"))
 
 	def calculate_lifetime_win_percent(self):
+		""" Returns the owner's career win percentage """
 		wins = 0
 		games = 0
 		for years_matchups in self.matchups.values():
@@ -37,6 +42,7 @@ class Owner:
 		return wins / games
 
 	def calculate_lifetime_win_percent_against(self, opponent_name):
+		""" Returns the owner's career win percentage against the given opponent """
 		wins = 0
 		games = 0
 		for years_matchups in self.matchups.values():
@@ -49,6 +55,7 @@ class Owner:
 		return wins / games
 
 	def calculate_playoff_appearances(self):
+		""" Returns the number of times the owner has made the playoffs """
 		appearances = 0
 		for years_matchups in self.matchups.values():
 			if years_matchups[-1].type.name == "PLAYOFF":
