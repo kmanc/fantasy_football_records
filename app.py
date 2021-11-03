@@ -16,14 +16,15 @@ first_year = int(config["ESPN"]["league_founded"])
 league_name = config["WEBSITE"]["league_name"].replace('"', '')
 league_abbreviation = config["WEBSITE"]["league_abbreviation"].replace('"', '')
 
-if f"{league_name}.pickle" in os.listdir():
-    with open(f"{league_name}.pickle", "rb") as f:
+pickle_filename = f"{dir_path}/{league_name}.pickle"
+if os.path.exists(pickle_filename):
+    with open(pickle_filename, "rb") as f:
         league_instance = pickle.load(f)
         league_instance.update_espn_objects()
-        league_instance.save_to_file()
+        league_instance.save_to_file(pickle_filename)
 else:
     league_instance = FantasyLeague(s2, swid, first_year, league_id)
-    league_instance.save_to_file()
+    league_instance.save_to_file(pickle_filename)
 
 app = Flask(__name__)
 Bootstrap(app)
