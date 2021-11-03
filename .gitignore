@@ -1,10 +1,8 @@
 # Directories
-past_years/*
-!past_years/.gitkeep
-records/*
-!records/.gitkeep
 venv/
 .idea/
+__pycache__/
 
 # Files
 config.ini
+*.pickle
