@@ -6,10 +6,16 @@ class GameOutcome(Enum):
 	LOSS = auto()
 	TIE = auto()
 
+	def __repr__(self):
+		return self.name
+
 
 class GameType(Enum):
 	REGULAR_SEASON = auto()
 	PLAYOFF = auto()
+
+	def __repr__(self):
+		return self.name
 
 
 class Matchup:
