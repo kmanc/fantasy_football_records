@@ -16,6 +16,7 @@ class FantasyLeague:
 	owners: dict
 
 	def matchup_by_outcome_generator(self, outcome=None):
+		""" Yields any matchup with the given outcome (or all matchups) """
 		for owner in self.owners.values():
 			for matchups in owner.matchups.values():
 				for matchup in matchups:
@@ -25,6 +26,10 @@ class FantasyLeague:
 						yield matchup
 
 	def season_generator(self, season_type="REGULAR_SEASON", omit_current=False):
+		"""
+			Yields a dict containing the owner's name, team name, year, and total points scored in that season type
+			Defaults to regular season but can also be PLAYOFF
+		"""
 		for owner in self.owners.values():
 			for year, matchups in owner.matchups.items():
 				if omit_current and year == max(self.espn_objects):
@@ -32,41 +37,49 @@ class FantasyLeague:
 				yield {"owner": owner.name, "team": owner.teams.get(year), "year": year, "points": sum(matchup.score for matchup in matchups if matchup.type.name == season_type)}
 
 	def calculate_highest_loss_points(self, number=10):
+		""" Returns the {number} highest scores in games that were lost """
 		games = self.matchup_by_outcome_generator(outcome="LOSS")
 
-		return heapq.nlargest(number, games, key=lambda x: x.score)
+		return [vars(record) for record in heapq.nlargest(number, games, key=lambda x: x.score)]
 
 	def calculate_highest_playoff_season_points(self, number=10):
+		""" Returns the {number} highest point totals in a single year's playoffs """
 		seasons = self.season_generator(season_type="PLAYOFF")
 
 		return heapq.nlargest(number, seasons, key=lambda x: x.get("points"))
 
 	def calculate_highest_regular_season_points(self, number=10):
+		""" Returns the {number} highest point totals in a single year's regular season """
 		seasons = self.season_generator()
 
 		return heapq.nlargest(number, seasons, key=lambda x: x.get("points"))
 
 	def calculate_highest_single_week_points(self, number=10):
+		""" Returns the {number} highest scores in a single week """
 		games = self.matchup_by_outcome_generator()
 
-		return heapq.nlargest(number, games, key=lambda x: x.score)
+		return [vars(record) for record in heapq.nlargest(number, games, key=lambda x: x.score)]
 
 	def calculate_lowest_regular_season_points(self, number=10):
+		""" Returns the {number} lowest point totals in a single year's regular season """
 		seasons = self.season_generator(omit_current=True)
 
 		return heapq.nsmallest(number, seasons, key=lambda x: x.get("points"))
 
 	def calculate_lowest_single_week_points(self, number=10):
+		""" Returns the {number} lowest scores in a single week """
 		games = self.matchup_by_outcome_generator()
 
-		return heapq.nsmallest(number, games, key=lambda x: x.score)
+		return [vars(record) for record in heapq.nsmallest(number, games, key=lambda x: x.score)]
 
 	def calculate_lowest_win_points(self, number=10):
+		""" Returns the {number} lowest scores in games that were won """
 		games = self.matchup_by_outcome_generator(outcome="WIN")
 
-		return heapq.nsmallest(number, games, key=lambda x: x.score)
+		return [vars(record) for record in heapq.nsmallest(number, games, key=lambda x: x.score)]
 
 	def get_active_owners(self):
+		""" Returns active league owners """
 		owner_names = set()
 		for team in self.espn_objects.get(max(self.espn_objects)).teams:
 			owner_names.add(team.owner.replace("  ", " ").strip().title())
@@ -74,6 +87,7 @@ class FantasyLeague:
 		return owner_names
 
 	def get_all_matchups(self):
+		""" Returns a dict where the keys are owners. Values are dicts where keys are years and values are matchup lists """
 		owners_matchups = defaultdict(lambda: defaultdict(list))
 		for year, espn_object in self.espn_objects.items():
 			max_week = min(len(espn_object.settings.matchup_periods), espn_object.current_week)
@@ -97,6 +111,7 @@ class FantasyLeague:
 		return owners_matchups
 
 	def get_all_owners(self):
+		""" Returns all owners who have participated in the league """
 		owner_names = set()
 		for espn_object in self.espn_objects.values():
 			for team in espn_object.teams:
@@ -105,9 +120,11 @@ class FantasyLeague:
 		return owner_names
 
 	def get_fantasy_year(self, year):
+		""" Returns an ESPN_API object for the given year """
 		return League(league_id=self.league_id, year=year, espn_s2=self.espn_s2, swid=self.espn_swid)
 
 	def get_owners_teams(self, owner_name):
+		""" Returns a dict where the keys are years and the values are the name of that owner's team in that year """
 		owners_teams = {}
 		for year, espn_object in self.espn_objects.items():
 			for team in espn_object.teams:
@@ -117,12 +134,14 @@ class FantasyLeague:
 		return owners_teams
 
 	def save_to_file(self, filename=None):
+		""" Saves the entire class to a pickled file """
 		if filename is None:
 			filename = f"{self.name}.pickle"
 		with open(filename, "wb") as f:
 			pickle.dump(self, f)
 
 	def update_espn_objects(self):
+		""" Updates the self.espn_objects dict with all missing ESPN_API data """
 		all_league_years = range(self.founded, date.today().year + 1)
 		needs_update = []
 		new_objects_dict = {}
