@@ -1,0 +1,59 @@
+from enum import Enum, auto
+
+
+class GameOutcome(Enum):
+	WIN = auto()
+	LOSS = auto()
+	TIE = auto()
+
+
+class GameType(Enum):
+	REGULAR_SEASON = auto()
+	PLAYOFF = auto()
+
+
+class Matchup:
+	opponent_owner_name: str
+	owner_name: str
+	outcome: GameOutcome
+	score: int
+	team_name: str
+	type: GameType
+	week: int
+	year: int
+
+	def __init__(self, owner, team, year, week, matchup):
+		if matchup.data.get("playoffTierType") == "WINNERS_BRACKET":
+			self.type = GameType.PLAYOFF
+		else:
+			self.type = GameType.REGULAR_SEASON
+		self.owner_name = owner
+		self.team_name = team
+		self.week = week
+		self.year = year
+		if owner == matchup.home_team.owner.replace("  ", " ").strip().title():
+			self.score = matchup.home_score
+			try:
+				self.opponent_owner_name = matchup.away_team.owner.replace("  ", " ").strip().title()
+			except AttributeError:
+				self.opponent_owner_name = "BYE"
+			if matchup.data.get("winner") == "HOME":
+				self.outcome = GameOutcome.WIN
+			elif matchup.data.get("winner") == "AWAY":
+				self.outcome = GameOutcome.LOSS
+			elif matchup.data.get("winner") == "UNDECIDED" and self.opponent_owner_name == "BYE":
+				self.outcome = GameOutcome.WIN
+			else:
+				self.outcome = GameOutcome.TIE
+		else:
+			self.score = matchup.away_score
+			try:
+				self.opponent_owner_name = matchup.home_team.owner.replace("  ", " ").strip().title()
+			except AttributeError:
+				self.opponent_owner_name = "BYE"
+			if matchup.data.get("winner") == "HOME":
+				self.outcome = GameOutcome.LOSS
+			elif matchup.data.get("winner") == "AWAY":
+				self.outcome = GameOutcome.WIN
+			else:
+				self.outcome = GameOutcome.TIE
