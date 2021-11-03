@@ -59,7 +59,7 @@ def format_lifetime_records_for_display(records_obj, percent=False):
     formatted = deepcopy(records_obj)
     for record in formatted:
         if percent:
-            record["value"] = round(record.get("value"), 4) * 100
+            record["value"] = round(record.get("value") * 100, 2)
         else:
             record["value"] = round(record.get("value"), 2)
         record["owner_name"] = format_owner_for_display(record.get("owner"))
@@ -192,6 +192,25 @@ def highest_losses():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Most points that still lost")
+
+
+@app.route("/head-to-head/<owner>")
+def head_to_head(owner):
+    owner = league_instance.owners.get(owner.strip().title())
+    if owner is None:
+        return render_template('index.html',
+                               title_prefix=league_abbreviation,
+                               record_name="Home",
+                               welcome_message=f"Welcome to the {league_name} online record book")
+    records = sorted(({"owner": opponent, "value": owner.calculate_lifetime_win_percent_against(opponent.name)}
+                      for opponent in league_instance.owners.values() if opponent.name != owner.name),
+                     key=lambda x: x.get("value"), reverse=True)
+    records_for_display = format_lifetime_records_for_display(records, percent=True)
+    return render_template('table_minimal.html',
+                           records=records_for_display,
+                           title_prefix=league_abbreviation,
+                           record_name=f"Win percentages for {owner.name}",
+                           percent="%")
 
 
 if __name__ == "__main__":
