@@ -34,7 +34,7 @@ class FantasyLeague:
 			for year, matchups in owner.matchups.items():
 				if omit_current and year == max(self.espn_objects):
 					continue
-				yield {"owner": owner.name, "team": owner.teams.get(year), "year": year, "points": sum(matchup.score for matchup in matchups if matchup.type.name == season_type)}
+				yield {"owner_name": owner.name, "team_name": owner.teams.get(year), "year": year, "points": sum(matchup.score for matchup in matchups if matchup.type.name == season_type)}
 
 	def calculate_highest_loss_points(self, number=10):
 		""" Returns the {number} highest scores in games that were lost """
