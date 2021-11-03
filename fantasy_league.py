@@ -1,4 +1,5 @@
 import heapq
+import pickle
 from collections import defaultdict
 from datetime import date
 from espn_api.football import League
@@ -115,13 +116,39 @@ class FantasyLeague:
 
 		return owners_teams
 
+	def save_to_file(self, filename=None):
+		if filename is None:
+			filename = f"{self.name}.pickle"
+		with open(filename, "wb") as f:
+			pickle.dump(self, f)
+
+	def update_espn_objects(self):
+		all_league_years = range(self.founded, date.today().year + 1)
+		needs_update = []
+		new_objects_dict = {}
+		for year in all_league_years:
+			try:
+				years_data = self.espn_objects.get(year)
+			except AttributeError:
+				needs_update.append(year)
+				continue
+			if years_data is None:
+				needs_update.append(year)
+			elif years_data.current_week != len(years_data.settings.matchup_periods):
+				needs_update.append(year)
+		for year in needs_update:
+			candidate_object = self.get_fantasy_year(year)
+			if candidate_object is not None:
+				new_objects_dict[year] = candidate_object
+
+		self.espn_objects = new_objects_dict
+
 	def __init__(self, espn_s2, espn_swid, founded_year, league_id):
 		self.espn_s2 = espn_s2
 		self.espn_swid = espn_swid
 		self.founded = founded_year
 		self.league_id = league_id
-		espn_object_candidates = {year: self.get_fantasy_year(year) for year in range(self.founded, date.today().year + 1)}
-		self.espn_objects = {k: v for k, v in espn_object_candidates.items() if v is not None}
+		self.update_espn_objects()
 		self.name = self.espn_objects.get(max(self.espn_objects)).settings.name
 		all_owners = self.get_all_owners()
 		active_owners = self.get_active_owners()
