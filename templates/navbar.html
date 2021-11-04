@@ -3,7 +3,7 @@
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
+    <div class="navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
             <li class="nav-item active">
                 <a class="nav-link" href="/" style="text-align:center">Home</a>
@@ -44,12 +44,12 @@
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown">
+                   aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" style="text-align:center">
                     Head-to-head
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                     {% for owner in owners %}
-                        <a class="dropdown-item" href="/head-to-head/{{ owner }}">{{ owner }}</a>
+                    <a class="dropdown-item" href="/head-to-head/{{ owner }}" style="text-align:center">{{ owner }}</a>
                     {% endfor %}
                 </div>
             </li>
