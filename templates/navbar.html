@@ -1,5 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
@@ -11,7 +12,8 @@
                 <a class="nav-link" href="/championships" style="text-align:center">Championships</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/total_regular_season_points" style="text-align:center">All-time regular season points</a>
+                <a class="nav-link" href="/total_regular_season_points" style="text-align:center">All-time regular
+                    season points</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/total_playoff_points" style="text-align:center">All-time playoff points</a>
@@ -39,6 +41,17 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/lowest_win" style="text-align:center">Lowest week win</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown">
+                    Head-to-head
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    {% for owner in owners %}
+                        <a class="dropdown-item" href="/head-to-head/{{ owner }}">{{ owner }}</a>
+                    {% endfor %}
+                </div>
             </li>
         </ul>
     </div>
