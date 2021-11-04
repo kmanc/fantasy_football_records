@@ -55,7 +55,7 @@ class Owner:
 		try:
 			return wins / games
 		except ZeroDivisionError:
-			return 0
+			return 0.0
 
 	def calculate_playoff_appearances(self):
 		""" Returns the number of times the owner has made the playoffs """
