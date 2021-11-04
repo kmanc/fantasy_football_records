@@ -72,7 +72,8 @@ def index():
     return render_template('index.html',
                            title_prefix=league_abbreviation,
                            record_name="Home",
-                           welcome_message=f"Welcome to the {league_name} online record book")
+                           welcome_message=f"Welcome to the {league_name} online record book",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/championships")
@@ -84,7 +85,8 @@ def championships():
     return render_template('table_minimal.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Championships")
+                           record_name="Championships",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/total_regular_season_points")
@@ -95,7 +97,8 @@ def total_regular_season_points():
     return render_template('table_minimal.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="All time regular season points")
+                           record_name="All time regular season points",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/total_playoff_points")
@@ -107,7 +110,8 @@ def total_playoff_points():
     return render_template('table_minimal.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="All time playoff points")
+                           record_name="All time playoff points",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/win_percent")
@@ -119,7 +123,8 @@ def win_percents():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Win percentage",
-                           percent="%")
+                           percent="%",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/playoff_appearances")
@@ -131,7 +136,8 @@ def playoff_appearances():
     return render_template('table_minimal.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Playoff appearances")
+                           record_name="Playoff appearances",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/highest_regular_season")
@@ -141,7 +147,8 @@ def highest_regular_seasons():
     return render_template('table_no_week.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Most points in one season")
+                           record_name="Most points in one season",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/lowest_regular_season")
@@ -151,7 +158,8 @@ def lowest_regular_seasons():
     return render_template('table_no_week.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Least points in one season")
+                           record_name="Least points in one season",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/highest_week")
@@ -161,7 +169,8 @@ def highest_weeks():
     return render_template('table_full.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Most points in one week")
+                           record_name="Most points in one week",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/lowest_week")
@@ -171,7 +180,8 @@ def lowest_weeks():
     return render_template('table_full.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Least points in one week")
+                           record_name="Least points in one week",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/lowest_win")
@@ -181,7 +191,8 @@ def lowest_wins():
     return render_template('table_full.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Least points that still won")
+                           record_name="Least points that still won",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/highest_loss")
@@ -191,7 +202,8 @@ def highest_losses():
     return render_template('table_full.html',
                            records=records_for_display,
                            title_prefix=league_abbreviation,
-                           record_name="Most points that still lost")
+                           record_name="Most points that still lost",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 @app.route("/head-to-head/<owner>")
@@ -201,7 +213,8 @@ def head_to_head(owner):
         return render_template('index.html',
                                title_prefix=league_abbreviation,
                                record_name="Home",
-                               welcome_message=f"Welcome to the {league_name} online record book")
+                               welcome_message=f"Welcome to the {league_name} online record book",
+                               owners=sorted((owner for owner in league_instance.owners)))
     records = sorted(({"owner": opponent, "value": owner.calculate_lifetime_win_percent_against(opponent.name)}
                       for opponent in league_instance.owners.values() if opponent.name != owner.name),
                      key=lambda x: x.get("value"), reverse=True)
@@ -210,7 +223,8 @@ def head_to_head(owner):
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name=f"Win percentages for {owner.name}",
-                           percent="%")
+                           percent="%",
+                           owners=sorted((owner for owner in league_instance.owners)))
 
 
 if __name__ == "__main__":
