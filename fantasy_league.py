@@ -87,7 +87,10 @@ class FantasyLeague:
 		return owner_names
 
 	def get_all_matchups(self):
-		""" Returns a dict where the keys are owners. Values are dicts where keys are years and values are matchup lists """
+		"""
+			Returns a dict where the keys are owners.
+			Values are dicts where keys are years and values are matchup lists
+		"""
 		owners_matchups = defaultdict(lambda: defaultdict(list))
 		for year, espn_object in self.espn_objects.items():
 			max_week = min(len(espn_object.settings.matchup_periods), espn_object.current_week)
@@ -106,7 +109,7 @@ class FantasyLeague:
 						away_owner = "BYE"
 					owners_matchups[home_owner][year].append(matchup)
 					owners_matchups[away_owner][year].append(matchup)
-		del owners_matchups["BYE"]
+		owners_matchups.pop("BYE", None)
 
 		return owners_matchups
 
