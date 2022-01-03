@@ -3,6 +3,7 @@ import pickle
 from collections import defaultdict
 from datetime import date
 from espn_api.football import League
+from espn_api.requests.espn_requests import ESPNInvalidLeague
 from fantasy_owner import Owner
 
 
@@ -14,6 +15,7 @@ class FantasyLeague:
 	league_id: int
 	name: str
 	owners: dict
+	max_completed_year: int
 
 	def matchup_by_outcome_generator(self, outcome=None):
 		""" Yields any matchup with the given outcome (or all matchups) """
@@ -87,7 +89,10 @@ class FantasyLeague:
 		return owner_names
 
 	def get_all_matchups(self):
-		""" Returns a dict where the keys are owners. Values are dicts where keys are years and values are matchup lists """
+		"""
+			Returns a dict where the keys are owners.
+			Values are dicts where keys are years and values are matchup lists
+		"""
 		owners_matchups = defaultdict(lambda: defaultdict(list))
 		for year, espn_object in self.espn_objects.items():
 			max_week = min(len(espn_object.settings.matchup_periods), espn_object.current_week)
@@ -106,7 +111,7 @@ class FantasyLeague:
 						away_owner = "BYE"
 					owners_matchups[home_owner][year].append(matchup)
 					owners_matchups[away_owner][year].append(matchup)
-		del owners_matchups["BYE"]
+		owners_matchups.pop("BYE", None)
 
 		return owners_matchups
 
@@ -156,11 +161,27 @@ class FantasyLeague:
 			elif years_data.current_week != len(years_data.settings.matchup_periods):
 				needs_update.append(year)
 		for year in needs_update:
-			candidate_object = self.get_fantasy_year(year)
+			try:
+				candidate_object = self.get_fantasy_year(year)
+			except ESPNInvalidLeague:
+				candidate_object = None
 			if candidate_object is not None:
 				new_objects_dict[year] = candidate_object
 
 		self.espn_objects = new_objects_dict
+
+	def update_max_completed_year(self):
+		""" Updates the self.max_completed_year to the most recent year that is complete """
+		last_game_dict = defaultdict(list)
+		for owner_data in self.owners.values():
+			for year, year_data in owner_data.matchups.items():
+				last_game = year_data[-1]
+				if last_game.outcome.name == "WIN" and last_game.type.name == "PLAYOFF":
+					last_game_dict[year].append(last_game)
+
+		completed = (year for year, games in last_game_dict.items() if len(games) == 1)
+
+		self.max_completed_year = max(completed)
 
 	def __init__(self, espn_s2, espn_swid, founded_year, league_id):
 		self.espn_s2 = espn_s2
@@ -179,3 +200,4 @@ class FantasyLeague:
 			owner_active = owner in active_owners
 			owner_objects[owner] = (Owner(owner_name=owner, owner_matchups=owner_matchups, owner_teams=owner_teams, owner_active=owner_active))
 		self.owners = owner_objects
+		self.update_max_completed_year()
