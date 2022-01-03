@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import date
 from fantasy_matchup import Matchup
 
 
@@ -17,9 +18,9 @@ class Owner:
 				elif matchup.type.name == game_type:
 					yield matchup
 
-	def calculate_championship_wins(self):
+	def calculate_championship_wins(self, max_year=date.today().year):
 		""" Returns the number of championships the owner has won """
-		return sum(matchup[-1].type.name == "PLAYOFF" and matchup[-1].outcome.name == "WIN" for matchup in self.matchups.values())
+		return sum(matchup[-1].type.name == "PLAYOFF" and matchup[-1].outcome.name == "WIN" and matchup[-1].year <= max_year for matchup in self.matchups.values())
 
 	def calculate_lifetime_playoff_points(self):
 		""" Returns the total points the owner has scored in playoff games """

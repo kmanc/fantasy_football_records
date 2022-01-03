@@ -78,8 +78,8 @@ def index():
 
 @app.route("/championships")
 def championships():
-    records = sorted(({"owner": owner, "value": owner.calculate_championship_wins()} for owner in
-                      league_instance.owners.values() if owner.calculate_championship_wins() > 0),
+    records = sorted(({"owner": owner, "value": owner.calculate_championship_wins(league_instance.max_completed_year)}
+                      for owner in league_instance.owners.values() if owner.calculate_championship_wins() > 0),
                      key=lambda x: x.get("value"), reverse=True)
     records_for_display = format_lifetime_records_for_display(records)
     return render_template('table_minimal.html',
