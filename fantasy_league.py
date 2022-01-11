@@ -64,7 +64,12 @@ class FantasyLeague:
 
 	def calculate_lowest_regular_season_points(self, number=10):
 		""" Returns the {number} lowest point totals in a single year's regular season """
-		seasons = self.season_generator(omit_current=True)
+		league_max = self.founded
+		for owner_data in self.owners.values():
+			their_max = max(owner_data.matchups.keys())
+			league_max = max(league_max, their_max)
+		needs_omit = league_max > self.max_completed_year
+		seasons = self.season_generator(omit_current=needs_omit)
 
 		return heapq.nsmallest(number, seasons, key=lambda x: x.get("points"))
 
@@ -168,7 +173,7 @@ class FantasyLeague:
 			if candidate_object is not None:
 				new_objects_dict[year] = candidate_object
 
-		self.espn_objects = new_objects_dict
+		return new_objects_dict
 
 	def update_max_completed_year(self):
 		""" Updates the self.max_completed_year to the most recent year that is complete """
@@ -181,14 +186,14 @@ class FantasyLeague:
 
 		completed = (year for year, games in last_game_dict.items() if len(games) == 1)
 
-		self.max_completed_year = max(completed)
+		return max(completed)
 
 	def __init__(self, espn_s2, espn_swid, founded_year, league_id):
 		self.espn_s2 = espn_s2
 		self.espn_swid = espn_swid
 		self.founded = founded_year
 		self.league_id = league_id
-		self.update_espn_objects()
+		self.espn_objects = self.update_espn_objects()
 		self.name = self.espn_objects.get(max(self.espn_objects)).settings.name
 		all_owners = self.get_all_owners()
 		active_owners = self.get_active_owners()
@@ -200,4 +205,4 @@ class FantasyLeague:
 			owner_active = owner in active_owners
 			owner_objects[owner] = (Owner(owner_name=owner, owner_matchups=owner_matchups, owner_teams=owner_teams, owner_active=owner_active))
 		self.owners = owner_objects
-		self.update_max_completed_year()
+		self.max_completed_year = self.update_max_completed_year()
