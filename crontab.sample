@@ -1,0 +1,3 @@
+# Note, I use sudo crontab -e, so things will run with root permissions
+# Update the stats weekly on Tuesday mornings (0500 PT --> 1200 UTC)
+0 12 * * TUE systemctl restart fantasy_football_records
