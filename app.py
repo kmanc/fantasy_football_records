@@ -32,9 +32,11 @@ Bootstrap(app)
 
 
 def format_owner_for_display(owner_obj):
-    if owner_obj.active:
+    if owner_obj.active and owner_obj.joined == league_instance.founded:
         return owner_obj.name
-    return f"{owner_obj.name}\N{ASTERISK} ({min(owner_obj.matchups)} - {max(owner_obj.matchups)})"
+    elif owner_obj.active:
+        return f"{owner_obj.name}\N{ASTERISK} (Joined {owner_obj.joined})"
+    return f"{owner_obj.name}\N{ASTERISK} ({owner_obj.joined} - {max(owner_obj.teams)})"
 
 
 def format_weekly_records_for_display(records_obj):

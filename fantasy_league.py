@@ -170,7 +170,7 @@ class FantasyLeague:
 			except ESPNInvalidLeague:
 				continue
 			if candidate_object is not None:
-                                self.espn_objects[year] = candidate_object
+				self.espn_objects[year] = candidate_object
 
 		return
 
@@ -202,7 +202,8 @@ class FantasyLeague:
 		for owner in all_owners:
 			owner_matchups = all_matchups.get(owner)
 			owner_teams = self.get_owners_teams(owner)
+			owner_start_year = min(owner_teams)
 			owner_active = owner in active_owners
-			owner_objects[owner] = (Owner(owner_name=owner, owner_matchups=owner_matchups, owner_teams=owner_teams, owner_active=owner_active))
+			owner_objects[owner] = (Owner(owner_joined=owner_start_year, owner_name=owner, owner_matchups=owner_matchups, owner_teams=owner_teams, owner_active=owner_active))
 		self.owners = owner_objects
 		self.max_completed_year = self.update_max_completed_year()

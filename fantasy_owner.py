@@ -5,6 +5,7 @@ from fantasy_matchup import Matchup
 
 class Owner:
 	active: bool
+	joined: int
 	matchups: defaultdict[list]
 	name: str
 	teams: dict
@@ -67,7 +68,8 @@ class Owner:
 
 		return appearances
 
-	def __init__(self, owner_name, owner_matchups, owner_teams, owner_active):
+	def __init__(self, owner_joined, owner_name, owner_matchups, owner_teams, owner_active):
+		self.joined = owner_joined
 		self.name = owner_name
 		self.teams = owner_teams
 		self.active = owner_active
