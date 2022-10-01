@@ -154,7 +154,6 @@ class FantasyLeague:
 		""" Updates the self.espn_objects dict with all missing ESPN_API data """
 		all_league_years = range(self.founded, date.today().year + 1)
 		needs_update = []
-		new_objects_dict = {}
 		for year in all_league_years:
 			try:
 				years_data = self.espn_objects.get(year)
@@ -169,11 +168,11 @@ class FantasyLeague:
 			try:
 				candidate_object = self.get_fantasy_year(year)
 			except ESPNInvalidLeague:
-				candidate_object = None
+				continue
 			if candidate_object is not None:
-				new_objects_dict[year] = candidate_object
+                                self.espn_objects[year] = candidate_object
 
-		return new_objects_dict
+		return
 
 	def update_max_completed_year(self):
 		""" Updates the self.max_completed_year to the most recent year that is complete """
@@ -193,7 +192,8 @@ class FantasyLeague:
 		self.espn_swid = espn_swid
 		self.founded = founded_year
 		self.league_id = league_id
-		self.espn_objects = self.update_espn_objects()
+		self.espn_objects = {}
+		self.update_espn_objects()
 		self.name = self.espn_objects.get(max(self.espn_objects)).settings.name
 		all_owners = self.get_all_owners()
 		active_owners = self.get_active_owners()
