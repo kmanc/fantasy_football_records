@@ -143,6 +143,34 @@ class FantasyLeague:
 
 		return owners_teams
 
+	def get_wffl_standings(self):
+		""" Gets the data required to determine what the standings are in accordance with the WFFL rules, then sorts it"""
+		standings_data = defaultdict(dict)
+
+		for team in self.espn_objects.get(max(self.espn_objects)).teams:
+			team_data = {
+				"division_losses": 0,
+				"division_wins": 0,
+				"total_losses": 0,
+				"total_points_scored": round(team.points_for, 2),
+				"total_wins": 0,
+			}
+			for win_loss, opponent in zip(team.outcomes, team.schedule):
+				if win_loss == "W" and team.division_id == opponent.division_id:
+					team_data["division_wins"] += 1
+					team_data["total_wins"] += 1
+				elif win_loss == "W" and team.division_id != opponent.division_id:
+					team_data["total_wins"] += 1
+				elif win_loss == "L" and team.division_id == opponent.division_id:
+					team_data["division_losses"] += 1
+					team_data["total_losses"] += 1
+				elif win_loss == "L" and team.division_id != opponent.division_id:
+					team_data["total_losses"] += 1
+
+			standings_data[team.division_name][team.team_name] = team_data
+
+		return standings_data
+
 	def save_to_file(self, filename=None):
 		""" Saves the entire class to a pickled file """
 		if filename is None:
