@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='bracket.css') }}">
+<main id="bracket">
+    <ul class="round round-1">
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top winner">{{ seeds[0] }}</li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">BYE</li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top">{{ seeds[4] }}</li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">{{ seeds[3] }}</li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top ">{{ seeds[5] }}</li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom">{{ seeds[2] }}</li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top">BYE</li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom winner">{{ seeds[1] }}</li>
+        <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-2">
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top">{{ seeds[0] }}</li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom "></li>
+
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom ">{{ seeds[1] }}</li>
+        <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-3">
+        <li class="spacer">&nbsp;</li>
+
+        <li class="game game-top"></li>
+        <li class="game game-spacer">&nbsp;</li>
+        <li class="game game-bottom "></li>
+        <li class="spacer">&nbsp;</li>
+    </ul>
+    <ul class="round round-4">
+        <li class="spacer">&nbsp;</li>
+        <li class="game game-top"></li>
+        <li class="spacer">&nbsp;</li>
+    </ul>
+</main>
+</br>
+<table id="data" class="table table-striped">
+    <thead>
+    <tr>
+        <th>Seed</th>
+        <th>Team Owner</th>
+        <th>Record</th>
+        <th>Points For</th>
+        <th>Points Out</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for record in records %}
+    <tr>
+        <td>{{ records[record].seed }}</td>
+        <td>{{ record }}</td>
+        <td>{{ records[record].total_wins ~ " - " ~ records[record].total_losses }}</td>
+        <td>{{ records[record].total_points_scored }}</td>
+        <td>{{ records[record].points_out }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
