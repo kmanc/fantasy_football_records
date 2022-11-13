@@ -195,6 +195,15 @@ class FantasyLeague:
             rest_data["points_out"] = round(wildcard_points_needed - rest_data.get('total_points_scored'), 2)
             playoff_picture[rest] = rest_data
 
+        seed = 1
+        for team, team_data in playoff_picture.items():
+            if seed <= 6:
+                team_data["seed"] = seed
+            elif seed >= 11:
+                team_data["seed"] = "P"
+            playoff_picture[team] = team_data
+            seed += 1
+
         return playoff_picture
 
     def _get_wffl_standings(self):

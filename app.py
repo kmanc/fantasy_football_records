@@ -78,6 +78,18 @@ def index():
                            owners=sorted((owner for owner in league_instance.owners)))
 
 
+@app.route("/snapshot")
+def snapshot():
+    playoff_picture = league_instance.get_wffl_playoff_picture()
+    seeds_as_list = list(playoff_picture.keys())[:6]
+    return render_template('snapshot.html',
+                           title_prefix=league_abbreviation,
+                           records=playoff_picture,
+                           record_name="Current playoff snapshot",
+                           seeds=seeds_as_list,
+                           owners=sorted((owner for owner in league_instance.owners)))
+
+
 @app.route("/championships")
 def championships():
     records = sorted(({"owner": owner, "value": owner.calculate_championship_wins(league_instance.max_completed_year)}
