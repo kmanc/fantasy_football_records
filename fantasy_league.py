@@ -158,6 +158,7 @@ class FantasyLeague:
         """
         playoff_picture = OrderedDict()
         division_standings, flat_standings = self._get_wffl_standings()
+        number_of_playoff_teams = self.espn_objects.get(max(self.espn_objects)).settings.playoff_team_count
 
         unsorted_division_winners = {}
         for division_data in division_standings.values():
@@ -197,9 +198,9 @@ class FantasyLeague:
 
         seed = 1
         for team, team_data in playoff_picture.items():
-            if seed <= 6:
+            if seed <= number_of_playoff_teams:
                 team_data["seed"] = seed
-            elif seed >= 11:
+            elif seed >= len(playoff_picture) - 1:
                 team_data["seed"] = "P"
             playoff_picture[team] = team_data
             seed += 1
