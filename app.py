@@ -21,8 +21,8 @@ pickle_filename = f"{dir_path}/{league_name}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
         league_instance = pickle.load(f)
-#    league_instance.update_espn_objects()
-#    league_instance.save_to_file(pickle_filename)
+    league_instance.update_espn_objects()
+    league_instance.save_to_file(pickle_filename)
 else:
     league_instance = FantasyLeague(s2, swid, first_year, league_id)
     league_instance.save_to_file(pickle_filename)
