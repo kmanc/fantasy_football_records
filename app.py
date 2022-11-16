@@ -21,14 +21,74 @@ pickle_filename = f"{dir_path}/{league_name}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
         league_instance = pickle.load(f)
-    league_instance.update_espn_objects()
-    league_instance.save_to_file(pickle_filename)
+#    league_instance.update_espn_objects()
+#    league_instance.save_to_file(pickle_filename)
 else:
     league_instance = FantasyLeague(s2, swid, first_year, league_id)
     league_instance.save_to_file(pickle_filename)
 
 app = Flask(__name__)
 Bootstrap(app)
+
+
+def determine_bye_clinches(playoff_obj):
+    simulation = deepcopy(league_instance)
+    number_of_byes = 2
+    current_byes = list(playoff_obj.keys())[:number_of_byes]
+
+    for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
+        if team.team_name in current_byes:
+            while "U" in team.outcomes:
+                team.outcomes.remove("U")
+            while len(team.outcomes) < simulation.espn_objects.get(
+                    max(simulation.espn_objects)).settings.reg_season_count:
+                team.outcomes.extend("L")
+            team.points_for = -1
+        else:
+            while "U" in team.outcomes:
+                team.outcomes.remove("U")
+            while len(team.outcomes) < simulation.espn_objects.get(
+                    max(simulation.espn_objects)).settings.reg_season_count:
+                team.outcomes.extend("W")
+
+    simulation_picture = simulation.get_wffl_playoff_picture()
+    simulation_byes = list(simulation_picture.keys())[:number_of_byes]
+
+    for current_bye in current_byes:
+        if current_bye in simulation_byes:
+            playoff_obj[current_bye]["clinched"] = "(clinched bye)"
+
+    return playoff_obj
+
+
+def determine_division_clinches(playoff_obj):
+    simulation = deepcopy(league_instance)
+    number_of_divisions = len(simulation.espn_objects.get(max(simulation.espn_objects)).settings.division_map)
+    current_leads = list(playoff_obj.keys())[:number_of_divisions]
+
+    for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
+        if team.team_name in current_leads:
+            while "U" in team.outcomes:
+                team.outcomes.remove("U")
+            while len(team.outcomes) < simulation.espn_objects.get(
+                    max(simulation.espn_objects)).settings.reg_season_count:
+                team.outcomes.extend("L")
+            team.points_for = -1
+        else:
+            while "U" in team.outcomes:
+                team.outcomes.remove("U")
+            while len(team.outcomes) < simulation.espn_objects.get(
+                    max(simulation.espn_objects)).settings.reg_season_count:
+                team.outcomes.extend("W")
+
+    simulation_picture = simulation.get_wffl_playoff_picture()
+    simulation_leads = list(simulation_picture.keys())[:number_of_divisions]
+
+    for current_lead in current_leads:
+        if current_lead in simulation_leads:
+            playoff_obj[current_lead]["clinched"] = "(clinched division)"
+
+    return playoff_obj
 
 
 def format_owner_for_display(owner_obj):
@@ -81,7 +141,10 @@ def index():
 @app.route("/snapshot")
 def snapshot():
     playoff_picture = league_instance.get_wffl_playoff_picture()
-    seeds_as_list = list(playoff_picture.keys())[:6]
+    playoff_picture = determine_division_clinches(playoff_picture)
+    playoff_picture = determine_bye_clinches(playoff_picture)
+    number_of_playoff_teams = league_instance.espn_objects.get(max(league_instance.espn_objects)).settings.playoff_team_count
+    seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=league_abbreviation,
                            records=playoff_picture,
