@@ -56,7 +56,7 @@ def determine_bye_clinches(playoff_obj):
 
     for current_bye in current_byes:
         if current_bye in simulation_byes:
-            playoff_obj[current_bye]["clinched"] = "clinched bye"
+            playoff_obj[current_bye]["clinched"] = "* clinched bye"
 
     return playoff_obj
 
@@ -86,7 +86,7 @@ def determine_division_clinches(playoff_obj):
 
     for current_lead in current_leads:
         if current_lead in simulation_leads:
-            playoff_obj[current_lead]["clinched"] = "clinched division"
+            playoff_obj[current_lead]["clinched"] = "* clinched division"
 
     return playoff_obj
 
