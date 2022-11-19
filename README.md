@@ -11,3 +11,28 @@
 ### Notes
 
 Get access to private leagues that you are a member of with the instructions on [cwendt94's awesome ESPN API repo](https://github.com/cwendt94/espn-api)
+
+My `sudo ufw status` output to allow only SSH, HTTP, and HTTP traffic to the Digital Ocean droplet
+
+```
+To                         Action      From
+--                         ------      ----
+OpenSSH                    ALLOW       Anywhere                  
+Nginx HTTPS                ALLOW       Anywhere                  
+80/tcp                     ALLOW       Anywhere                  
+OpenSSH (v6)               ALLOW       Anywhere (v6)             
+Nginx HTTPS (v6)           ALLOW       Anywhere (v6)             
+80/tcp (v6)                ALLOW       Anywhere (v6)
+```
+
+My `/etc/nginx/sites-available/<name>` addition (after certbot did most of the setup) to redirect HTTP traffic to HTTPS
+
+```
+server {
+    listen 80;
+    server_name _;
+    if ($scheme = "http") {
+        return 301 https://$host$request_uri;
+    }
+}
+```
