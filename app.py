@@ -38,18 +38,12 @@ def determine_bye_clinches(playoff_obj):
 
     for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
         if team.team_name in current_byes:
-            while "U" in team.outcomes:
-                team.outcomes.remove("U")
-            while len(team.outcomes) < simulation.espn_objects.get(
-                    max(simulation.espn_objects)).settings.reg_season_count:
-                team.outcomes.extend("L")
             team.points_for = -1
-        else:
-            while "U" in team.outcomes:
-                team.outcomes.remove("U")
-            while len(team.outcomes) < simulation.espn_objects.get(
-                    max(simulation.espn_objects)).settings.reg_season_count:
-                team.outcomes.extend("W")
+        for outcome_index, outcome in enumerate(team.outcomes):
+            if outcome == "U" and team.team_name in current_byes:
+                team.outcomes[outcome_index] = "L"
+            elif outcome == "U" and team.team_name not in current_byes:
+                team.outcomes[outcome_index] = "W"
 
     simulation_picture = simulation.get_wffl_playoff_picture()
     simulation_byes = list(simulation_picture.keys())[:number_of_byes]
@@ -57,6 +51,9 @@ def determine_bye_clinches(playoff_obj):
     for current_bye in current_byes:
         if current_bye in simulation_byes:
             playoff_obj[current_bye]["clinched"] = "** (clinched bye)"
+
+    # I don't know if this is necessary but I'm trying to prevent carrying around large copied objects
+    del simulation
 
     return playoff_obj
 
@@ -68,18 +65,12 @@ def determine_division_clinches(playoff_obj):
 
     for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
         if team.team_name in current_leads:
-            while "U" in team.outcomes:
-                team.outcomes.remove("U")
-            while len(team.outcomes) < simulation.espn_objects.get(
-                    max(simulation.espn_objects)).settings.reg_season_count:
-                team.outcomes.extend("L")
             team.points_for = -1
-        else:
-            while "U" in team.outcomes:
-                team.outcomes.remove("U")
-            while len(team.outcomes) < simulation.espn_objects.get(
-                    max(simulation.espn_objects)).settings.reg_season_count:
-                team.outcomes.extend("W")
+        for outcome_index, outcome in enumerate(team.outcomes):
+            if outcome == "U" and team.team_name in current_leads:
+                team.outcomes[outcome_index] = "L"
+            elif outcome == "U" and team.team_name not in current_leads:
+                team.outcomes[outcome_index] = "W"
 
     simulation_picture = simulation.get_wffl_playoff_picture()
     simulation_leads = list(simulation_picture.keys())[:number_of_divisions]
@@ -87,6 +78,9 @@ def determine_division_clinches(playoff_obj):
     for current_lead in current_leads:
         if current_lead in simulation_leads:
             playoff_obj[current_lead]["clinched"] = "* (clinched division)"
+
+    # I don't know if this is necessary but I'm trying to prevent carrying around large copied objects
+    del simulation
 
     return playoff_obj
 
