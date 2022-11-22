@@ -137,7 +137,7 @@ def snapshot():
     playoff_picture = league_instance.get_wffl_playoff_picture()
     playoff_picture = determine_division_clinches(playoff_picture)
     playoff_picture = determine_bye_clinches(playoff_picture)
-    number_of_playoff_teams = league_instance.espn_objects.get(max(league_instance.espn_objects)).settings.playoff_team_count
+    number_of_playoff_teams = league_instance.espn_objects.get(league_instance.current_active_year).settings.playoff_team_count
     seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=league_abbreviation,

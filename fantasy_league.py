@@ -8,6 +8,7 @@ from fantasy_owner import Owner
 
 
 class FantasyLeague:
+    current_active_year: int
     espn_objects: dict
     espn_s2: str
     espn_swid: str
@@ -34,7 +35,7 @@ class FantasyLeague:
         """
         for owner in self.owners.values():
             for year, matchups in owner.matchups.items():
-                if omit_current and year == max(self.espn_objects):
+                if omit_current and year == self.current_active_year:
                     continue
                 yield {"owner": owner, "team_name": owner.teams.get(year), "year": year,
                        "points": sum(matchup.score for matchup in matchups if matchup.type.name == season_type)}
@@ -89,7 +90,7 @@ class FantasyLeague:
     def get_active_owners(self):
         """ Returns active league owners """
         owner_names = set()
-        for team in self.espn_objects.get(max(self.espn_objects)).teams:
+        for team in self.espn_objects.get(self.current_active_year).teams:
             owner_names.add(team.owner.replace("  ", " ").strip().title())
 
         return owner_names
@@ -158,7 +159,7 @@ class FantasyLeague:
         """
         playoff_picture = OrderedDict()
         division_standings, flat_standings = self._get_wffl_standings()
-        number_of_playoff_teams = self.espn_objects.get(max(self.espn_objects)).settings.playoff_team_count
+        number_of_playoff_teams = self.espn_objects.get(self.current_active_year).settings.playoff_team_count
 
         unsorted_division_winners = {}
         for division_data in division_standings.values():
@@ -222,7 +223,7 @@ class FantasyLeague:
         divisional_standings = defaultdict(dict)
         flat_standings = defaultdict(dict)
 
-        for team in self.espn_objects.get(max(self.espn_objects)).teams:
+        for team in self.espn_objects.get(self.current_active_year).teams:
             team_data = {
                 "division_losses": 0,
                 "division_wins": 0,
@@ -313,7 +314,8 @@ class FantasyLeague:
         self.league_id = league_id
         self.espn_objects = {}
         self.update_espn_objects()
-        self.name = self.espn_objects.get(max(self.espn_objects)).settings.name
+        self.current_active_year = max(self.espn_objects)
+        self.name = self.espn_objects.get(self.current_active_year).settings.name
         all_owners = self.get_all_owners()
         active_owners = self.get_active_owners()
         all_matchups = self.get_all_matchups()
