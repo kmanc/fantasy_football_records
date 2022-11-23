@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <!--
+    TODO make the manager references dynamic (once they're added). And maybe add
+    default behavior if one is missing.
+  -->
+  <!-- TODO we might want to make these images into SVGs -->
+  <!--
+    TODO not sure why I put all these TODOs here, but I think we might want to
+    move the write-ups to a static dictionary or a JSON file.  This will let us
+    pull the contents themselves into the HTML (without having to read a text file),
+    and then put the content into a <p> or <span>, and style it.
+  -->
+  {% for manager in active %}
+    <div class="manager-info-card">
+      <h4>{{ manager }}</h4>
+      <br/>
+
+      <img src="/static/{{ active[0].lower().replace(' ', '') }}.png">
+      </br>
+
+      <iframe src="/static/{{ active[0].lower().replace(' ', '') }}.txt"></iframe>
+    </div>
+  {% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+  <!-- not technically a script but can add a new block for styles in the future -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='meet_the_managers.css') }}">
+{% endblock %}

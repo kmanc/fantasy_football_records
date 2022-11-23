@@ -301,7 +301,7 @@ def head_to_head(owner):
 @app.route("/meet_the_owners")
 def meet_the_owners():
     active_owners = sorted(owner for owner in league_instance.owners if league_instance.owners.get(owner).active)
-    return render_template('meet_the_owners.html',
+    return render_template('meet_the_managers.html',
                            title_prefix=league_abbreviation,
                            owners=sorted(owner for owner in league_instance.owners),
                            active=active_owners)
