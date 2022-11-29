@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <!--
+    TODO we might want to make these images into SVGs
+      -I tried this and it didn't work as well as I hoped, the free PNG to SVG converters aren't great
+  -->
+  {% for manager in managers %}
+    <div class="manager-info-card">
+      <h4>{{ manager['display_name'] }}</h4>
+      <br/>
+      <!-- TODO maybe all this logic should just be moved to python? -->
+      {% if os.path.exists(os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".png")) %}
+        {% set src = os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".png") %}
+      {% else %}
+        {% set src = os.path.join(meet_the_managers_assets, "default_manager.png") %}
+      {% endif %}
+
+      <img src="{{ src }}" alt="{{ manager['display_name'] }}">
+      </br>
+      <p>{{ bios[manager['key_name']] }}</p>
+    </div>
+  {% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+  <!-- not technically a script but can add a new block for styles in the future -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='meet_the_managers.css') }}">
+{% endblock %}

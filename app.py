@@ -1,6 +1,7 @@
 import configparser
 import os
 import pickle
+import json
 from copy import deepcopy
 from fantasy_league import FantasyLeague
 from flask import Flask, render_template
@@ -123,13 +124,18 @@ def format_lifetime_records_for_display(records_obj, percent=False):
     return formatted
 
 
+@app.context_processor
+def handle_context():
+    return dict(os=os)
+
+
 @app.route("/")
 def index():
     return render_template('index.html',
                            title_prefix=league_abbreviation,
                            record_name="Home",
                            welcome_message=f"Welcome to the {league_name} online record book",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/snapshot")
@@ -137,14 +143,14 @@ def snapshot():
     playoff_picture = league_instance.get_wffl_playoff_picture()
     playoff_picture = determine_division_clinches(playoff_picture)
     playoff_picture = determine_bye_clinches(playoff_picture)
-    number_of_playoff_teams = league_instance.espn_objects.get(max(league_instance.espn_objects)).settings.playoff_team_count
+    number_of_playoff_teams = league_instance.espn_objects.get(league_instance.current_active_year).settings.playoff_team_count
     seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=league_abbreviation,
                            records=playoff_picture,
                            record_name="Current playoff snapshot",
                            seeds=seeds_as_list,
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/championships")
@@ -157,7 +163,7 @@ def championships():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Championships",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/total_regular_season_points")
@@ -169,7 +175,7 @@ def total_regular_season_points():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="All time regular season points",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/total_playoff_points")
@@ -182,7 +188,7 @@ def total_playoff_points():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="All time playoff points",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/win_percent")
@@ -195,7 +201,7 @@ def win_percents():
                            title_prefix=league_abbreviation,
                            record_name="Win percentage",
                            percent="%",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/playoff_appearances")
@@ -208,7 +214,7 @@ def playoff_appearances():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Playoff appearances",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/highest_regular_season")
@@ -219,7 +225,7 @@ def highest_regular_seasons():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Most points in one season",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/lowest_regular_season")
@@ -230,7 +236,7 @@ def lowest_regular_seasons():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Least points in one season",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/highest_week")
@@ -241,7 +247,7 @@ def highest_weeks():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Most points in one week",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/lowest_week")
@@ -252,7 +258,7 @@ def lowest_weeks():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Least points in one week",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/lowest_win")
@@ -263,7 +269,7 @@ def lowest_wins():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Least points that still won",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/highest_loss")
@@ -274,7 +280,7 @@ def highest_losses():
                            records=records_for_display,
                            title_prefix=league_abbreviation,
                            record_name="Most points that still lost",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
 
 
 @app.route("/head-to-head/<owner>")
@@ -295,7 +301,30 @@ def head_to_head(owner):
                            title_prefix=league_abbreviation,
                            record_name=f"Win percentages for {owner.name}",
                            percent="%",
-                           owners=sorted((owner for owner in league_instance.owners)))
+                           owners=sorted(owner for owner in league_instance.owners))
+
+
+@app.route("/meet_the_owners")
+def meet_the_owners():
+    MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
+    MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
+
+    managers = []
+    for manager in sorted(league_instance.owners):
+        if league_instance.owners.get(manager).active:
+            managers.append(
+                {'display_name' : manager, 'key_name' : manager.lower().replace(' ', '')}
+            )
+
+    bios = {}
+    with open(MANAGER_BIOS_PATH, 'r') as f:
+        bios = json.loads(f.read())
+
+    return render_template('meet_the_managers.html',
+                           title_prefix=league_abbreviation,
+                           managers=managers,
+                           bios=bios,
+                           meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS)
 
 
 if __name__ == "__main__":
