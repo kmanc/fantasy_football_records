@@ -1,6 +1,7 @@
 # Directories
 venv/
 .idea/
+.vscode/
 __pycache__/
 
 # Files

@@ -1,6 +1,7 @@
 import configparser
 import os
 import pickle
+import json
 from copy import deepcopy
 from fantasy_league import FantasyLeague
 from flask import Flask, render_template
@@ -121,6 +122,11 @@ def format_lifetime_records_for_display(records_obj, percent=False):
         record["owner_name"] = format_owner_for_display(record.get("owner"))
 
     return formatted
+
+
+@app.context_processor
+def handle_context():
+    return dict(os=os)
 
 
 @app.route("/")
@@ -300,11 +306,25 @@ def head_to_head(owner):
 
 @app.route("/meet_the_owners")
 def meet_the_owners():
-    active_owners = sorted(owner for owner in league_instance.owners if league_instance.owners.get(owner).active)
+    MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
+    MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
+
+    managers = []
+    for manager in sorted(league_instance.owners):
+        if league_instance.owners.get(manager).active:
+            managers.append(
+                {'display_name' : manager, 'key_name' : manager.lower().replace(' ', '')}
+            )
+
+    bios = {}
+    with open(MANAGER_BIOS_PATH, 'r') as f:
+        bios = json.loads(f.read())
+
     return render_template('meet_the_managers.html',
                            title_prefix=league_abbreviation,
-                           owners=sorted(owner for owner in league_instance.owners),
-                           active=active_owners)
+                           managers=managers,
+                           bios=bios,
+                           meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS)
 
 
 if __name__ == "__main__":
