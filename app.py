@@ -1,6 +1,7 @@
 import configparser
 import os
 import pickle
+import json
 from copy import deepcopy
 from fantasy_league import FantasyLeague
 from flask import Flask, render_template
@@ -16,6 +17,8 @@ LEAGUE_ID = int(config["ESPN"]["league_id"])
 FIRST_YEAR = int(config["ESPN"]["league_founded"])
 LEAGUE_NAME = config["WEBSITE"]["league_name"].replace('"', '')
 LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
+MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
+MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
 
 pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
@@ -29,7 +32,7 @@ else:
 
 app = Flask(__name__)
 Bootstrap(app)
-SORTED_OWNERS = sorted((owner for owner in league_instance.owners))
+SORTED_OWNERS = sorted(league_instance.owners)
 
 
 def determine_bye_clinches(playoff_obj):
@@ -124,6 +127,11 @@ def format_lifetime_records_for_display(records_obj, percent=False):
     return formatted
 
 
+@app.context_processor
+def handle_context():
+    return dict(os=os)
+
+
 @app.route("/")
 def index():
     return render_template('index.html',
@@ -138,7 +146,7 @@ def snapshot():
     playoff_picture = league_instance.get_wffl_playoff_picture()
     playoff_picture = determine_division_clinches(playoff_picture)
     playoff_picture = determine_bye_clinches(playoff_picture)
-    number_of_playoff_teams = league_instance.espn_objects.get(max(league_instance.espn_objects)).settings.playoff_team_count
+    number_of_playoff_teams = league_instance.espn_objects.get(league_instance.current_active_year).settings.playoff_team_count
     seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -296,6 +304,26 @@ def head_to_head(owner):
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name=f"Win percentages for {owner.name}",
                            percent="%",
+                           owners=SORTED_OWNERS)
+
+
+@app.route("/meet_the_owners")
+def meet_the_owners():
+    managers = []
+    for manager in SORTED_OWNERS:
+        if league_instance.owners.get(manager).active:
+            managers.append(
+                {'display_name': manager, 'key_name': manager.lower().replace(' ', '')}
+            )
+
+    with open(MANAGER_BIOS_PATH, 'r') as f:
+        bios = json.loads(f.read())
+
+    return render_template('meet_the_managers.html',
+                           title_prefix=LEAGUE_ABBREVIATION,
+                           managers=managers,
+                           bios=bios,
+                           meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS,
                            owners=SORTED_OWNERS)
 
 
