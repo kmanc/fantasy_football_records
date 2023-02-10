@@ -36,12 +36,6 @@
     text-align: justify;
 }
 
-@media only screen and (min-width: 641px) {
-    .container>div {
-        width: calc(50% - var(--manager-info-margin) * 2);
-    }
-}
-
 @media only screen and (min-width: 1008px) {
     .container>div {
         width: calc(33% - var(--manager-info-margin) * 2);
