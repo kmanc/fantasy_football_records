@@ -37,10 +37,10 @@ class Matchup:
 		self.team_name = team
 		self.week = week
 		self.year = year
-		if owner == matchup.home_team.owner.replace("  ", " ").strip().title():
+		if owner == matchup.home_team.owner:
 			self.score = matchup.home_score
 			try:
-				self.opponent_owner_name = matchup.away_team.owner.replace("  ", " ").strip().title()
+				self.opponent_owner_name = matchup.away_team.owner
 			except AttributeError:
 				self.opponent_owner_name = "BYE"
 			if matchup.data.get("winner") == "HOME":
@@ -54,7 +54,7 @@ class Matchup:
 		else:
 			self.score = matchup.away_score
 			try:
-				self.opponent_owner_name = matchup.home_team.owner.replace("  ", " ").strip().title()
+				self.opponent_owner_name = matchup.home_team.owner
 			except AttributeError:
 				self.opponent_owner_name = "BYE"
 			if matchup.data.get("winner") == "HOME":

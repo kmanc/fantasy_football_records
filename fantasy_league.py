@@ -5,6 +5,7 @@ from datetime import date
 from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
 from fantasy_owner import Owner
+from utility import clean_name
 
 
 class FantasyLeague:
@@ -91,7 +92,8 @@ class FantasyLeague:
         """ Returns active league owners """
         owner_names = set()
         for team in self.espn_objects.get(self.current_active_year).teams:
-            owner_names.add(team.owner.replace("  ", " ").strip().title())
+            owner_names.add(clean_name(team.owner))
+
 
         return owner_names
 
@@ -110,13 +112,16 @@ class FantasyLeague:
                     continue
                 for matchup in scoreboard:
                     try:
-                        home_owner = matchup.home_team.owner.replace("  ", " ").strip().title()
+                        home_owner = clean_name(matchup.home_team.owner)
                     except AttributeError:
                         home_owner = "BYE"
                     try:
-                        away_owner = matchup.away_team.owner.replace("  ", " ").strip().title()
+                        away_owner = clean_name(matchup.away_team.owner)
                     except AttributeError:
                         away_owner = "BYE"
+
+                    matchup.home_team.owner = home_owner
+                    matchup.away_team.owner = away_owner
                     owners_matchups[home_owner][year].append(matchup)
                     owners_matchups[away_owner][year].append(matchup)
         owners_matchups.pop("BYE", None)
@@ -128,7 +133,8 @@ class FantasyLeague:
         owner_names = set()
         for espn_object in self.espn_objects.values():
             for team in espn_object.teams:
-                owner_names.add(team.owner.replace("  ", " ").strip().title())
+                owner_names.add(clean_name(team.owner))
+
 
         return owner_names
 
@@ -141,14 +147,14 @@ class FantasyLeague:
         owners_teams = {}
         for year, espn_object in self.espn_objects.items():
             for team in espn_object.teams:
-                if owner_name == team.owner.replace("  ", " ").strip().title():
+                if owner_name == clean_name(team.owner):
                     owners_teams[year] = team.team_name.replace("  ", " ").strip()
 
         return owners_teams
 
     def get_wffl_playoff_picture(self):
         """ Returns an ordered playoff projection with the help of _get_wffl_standings """
-        """ 
+        """
             Once the standings are sorted, divisional winners are seeded by total wins
                 Tiebreaker 1 - total points scored
             Then wildcard spots are determined by total points for
