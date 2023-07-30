@@ -115,10 +115,12 @@ class FantasyLeague:
                         home_owner = clean_name(matchup.home_team.owner)
                     except AttributeError:
                         home_owner = "BYE"
+                        matchup.home_team = type('', (object,), {})()
                     try:
                         away_owner = clean_name(matchup.away_team.owner)
                     except AttributeError:
                         away_owner = "BYE"
+                        matchup.away_team = type('', (object,), {})()
 
                     matchup.home_team.owner = home_owner
                     matchup.away_team.owner = away_owner

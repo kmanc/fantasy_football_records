@@ -39,10 +39,7 @@ class Matchup:
 		self.year = year
 		if owner == matchup.home_team.owner:
 			self.score = matchup.home_score
-			try:
-				self.opponent_owner_name = matchup.away_team.owner
-			except AttributeError:
-				self.opponent_owner_name = "BYE"
+			self.opponent_owner_name = matchup.away_team.owner
 			if matchup.data.get("winner") == "HOME":
 				self.outcome = GameOutcome.WIN
 			elif matchup.data.get("winner") == "AWAY":
@@ -53,10 +50,7 @@ class Matchup:
 				self.outcome = GameOutcome.TIE
 		else:
 			self.score = matchup.away_score
-			try:
-				self.opponent_owner_name = matchup.home_team.owner
-			except AttributeError:
-				self.opponent_owner_name = "BYE"
+			self.opponent_owner_name = matchup.home_team.owner
 			if matchup.data.get("winner") == "HOME":
 				self.outcome = GameOutcome.LOSS
 			elif matchup.data.get("winner") == "AWAY":
