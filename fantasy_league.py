@@ -137,7 +137,6 @@ class FantasyLeague:
             for team in espn_object.teams:
                 owner_names.add(clean_name(team.owner))
 
-
         return owner_names
 
     def get_fantasy_year(self, year):

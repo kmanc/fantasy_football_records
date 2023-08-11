@@ -76,7 +76,8 @@ class Owner:
 		parsed_matchups = defaultdict(list)
 		for year, matchups in owner_matchups.items():
 			for week, matchup in enumerate(matchups):
-				if matchup.data.get("playoffTierType") in ["LOSERS_CONSOLATION_LADDER", "WINNERS_CONSOLATION_LADDER"]:
+				print(vars(matchup))
+				if matchup.matchup_type in ["LOSERS_CONSOLATION_LADDER", "WINNERS_CONSOLATION_LADDER"]:
 					continue
 				parsed_matchups[year].append(Matchup(self.name, self.teams.get(year), year, week + 1, matchup))
 		self.matchups = parsed_matchups
