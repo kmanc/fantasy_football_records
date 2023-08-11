@@ -29,7 +29,7 @@ class Matchup:
 	year: int
 
 	def __init__(self, owner, team, year, week, matchup):
-		if matchup.data.get("playoffTierType") == "WINNERS_BRACKET":
+		if matchup.matchup_type == "WINNERS_BRACKET":
 			self.type = GameType.PLAYOFF
 		else:
 			self.type = GameType.REGULAR_SEASON
@@ -40,20 +40,21 @@ class Matchup:
 		if owner == matchup.home_team.owner:
 			self.score = matchup.home_score
 			self.opponent_owner_name = matchup.away_team.owner
-			if matchup.data.get("winner") == "HOME":
+			if matchup.home_score > matchup.away_score:
 				self.outcome = GameOutcome.WIN
-			elif matchup.data.get("winner") == "AWAY":
+			elif matchup.home_score < matchup.away_score:
 				self.outcome = GameOutcome.LOSS
-			elif matchup.data.get("winner") == "UNDECIDED" and self.opponent_owner_name == "BYE":
-				self.outcome = GameOutcome.WIN
-			else:
+			elif matchup.home_score == matchup.away_score:
 				self.outcome = GameOutcome.TIE
+			else:
+				self.outcome = GameOutcome.WIN
+
 		else:
 			self.score = matchup.away_score
 			self.opponent_owner_name = matchup.home_team.owner
-			if matchup.data.get("winner") == "HOME":
+			if matchup.home_score > matchup.away_score:
 				self.outcome = GameOutcome.LOSS
-			elif matchup.data.get("winner") == "AWAY":
+			elif matchup.home_score < matchup.away_score:
 				self.outcome = GameOutcome.WIN
 			else:
 				self.outcome = GameOutcome.TIE

@@ -1,7 +1,8 @@
 MANAGER_ALIASES = {
-	"Joe Guidoboni" : "Joe",
-	"Brendan Shea" : "Durgan",
+    "Joe Guidoboni": "Joe",
+    "Brendan Shea": "Durgan",
 }
+
 
 def clean_name(name: str) -> str:
     """Cleans up a manager's name str and fetches its alias, if present"""
