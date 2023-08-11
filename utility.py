@@ -1,6 +1,6 @@
 MANAGER_ALIASES = {
-	"Joe Guidoboni" : "Poopoo Peepants",
-	"Brendan Shea" : "Real League Daddy",
+	"Joe Guidoboni" : "Joe",
+	"Brendan Shea" : "Durgan",
 }
 
 def clean_name(name: str) -> str:
