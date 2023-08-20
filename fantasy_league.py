@@ -2,10 +2,12 @@ import heapq
 import pickle
 from collections import defaultdict, OrderedDict
 from datetime import date
+
 from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
+
 from fantasy_owner import Owner
-from utility import clean_name
+from utility import clean_name, clean_team
 
 
 class FantasyLeague:
@@ -94,7 +96,6 @@ class FantasyLeague:
         for team in self.espn_objects.get(self.current_active_year).teams:
             owner_names.add(clean_name(team.owner))
 
-
         return owner_names
 
     def get_all_matchups(self):
@@ -149,7 +150,8 @@ class FantasyLeague:
         for year, espn_object in self.espn_objects.items():
             for team in espn_object.teams:
                 if owner_name == clean_name(team.owner):
-                    owners_teams[year] = team.team_name.replace("  ", " ").strip()
+                    owners_teams[year] = clean_team(owner_name, year, team.team_name)
+                    # owners_teams[year] = team.team_name.replace("  ", " ").strip()
 
         return owners_teams
 

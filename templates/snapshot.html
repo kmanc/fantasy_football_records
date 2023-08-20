@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='bracket.css') }}">
+<link href="{{ url_for('static', filename='bracket.css') }}" rel="stylesheet">
 <main id="bracket">
     <ul class="round round-1">
         <li class="spacer">&nbsp;</li>
@@ -58,7 +58,7 @@
     </ul>
 </main>
 </br>
-<table id="data" class="table table-striped">
+<table class="table table-striped" id="data">
     <thead>
     <tr>
         <th>Seed</th>
@@ -72,7 +72,7 @@
     {% for record in records %}
     <tr>
         <td>{{ records[record].seed }}</td>
-        <td>{{ record ~ records[record].clinched  }}</td>
+        <td>{{ record ~ records[record].clinched }}</td>
         <td>{{ records[record].total_wins ~ " - " ~ records[record].total_losses }}</td>
         <td>{{ records[record].total_points_scored }}</td>
         <td>{{ records[record].points_out }}</td>

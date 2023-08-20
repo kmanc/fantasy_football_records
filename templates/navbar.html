@@ -42,11 +42,11 @@
                 <a class="nav-link" href="/lowest_win" style="text-align:center">Lowest week win</a>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false" data-bs-toggle="dropdown" style="text-align:center">
+                <a aria-expanded="false" aria-haspopup="true" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                   data-toggle="dropdown" href="#" id="navbarDropdownMenuLink" style="text-align:center">
                     Head-to-head
                 </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <div aria-labelledby="navbarDropdownMenuLink" class="dropdown-menu">
                     {% for owner in owners %}
                     <a class="dropdown-item" href="/head-to-head/{{ owner }}" style="text-align:center">{{ owner }}</a>
                     {% endfor %}

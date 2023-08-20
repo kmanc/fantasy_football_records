@@ -1,11 +1,13 @@
 import configparser
+import json
 import os
 import pickle
-import json
 from copy import deepcopy
-from fantasy_league import FantasyLeague
+
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
+
+from fantasy_league import FantasyLeague
 
 config = configparser.ConfigParser()
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -24,8 +26,8 @@ pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
         league_instance = pickle.load(f)
-    league_instance.update_espn_objects()
-    league_instance.save_to_file(pickle_filename)
+        league_instance.update_espn_objects()
+        league_instance.save_to_file(pickle_filename)
 else:
     league_instance = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
     league_instance.save_to_file(pickle_filename)
@@ -146,7 +148,8 @@ def snapshot():
     playoff_picture = league_instance.get_wffl_playoff_picture()
     playoff_picture = determine_division_clinches(playoff_picture)
     playoff_picture = determine_bye_clinches(playoff_picture)
-    number_of_playoff_teams = league_instance.espn_objects.get(league_instance.current_active_year).settings.playoff_team_count
+    number_of_playoff_teams = league_instance.espn_objects.get(
+        league_instance.current_active_year).settings.playoff_team_count
     seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -331,4 +334,4 @@ if __name__ == "__main__":
     # For testing
     app.run(debug=True)
     # For real
-    #app.run(host="0.0.0.0")
+    # app.run(host="0.0.0.0")
