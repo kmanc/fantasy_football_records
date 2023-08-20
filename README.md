@@ -10,7 +10,8 @@
 
 ### Notes
 
-Get access to private leagues that you are a member of with the instructions on [cwendt94's awesome ESPN API repo](https://github.com/cwendt94/espn-api)
+Get access to private leagues that you are a member of with the instructions
+on [cwendt94's awesome ESPN API repo](https://github.com/cwendt94/espn-api)
 
 My `sudo ufw status` output to allow only SSH, HTTP, and HTTP traffic to the Digital Ocean droplet
 

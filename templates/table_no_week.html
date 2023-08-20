@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <table id="data" class="table table-striped">
+<table class="table table-striped" id="data">
     <thead>
-      <tr>
+    <tr>
         <th>Team Owner</th>
         <th>Team Name</th>
         <th>Year</th>
         <th>Points</th>
-      </tr>
+    </tr>
     </thead>
     <tbody>
-      {% for record in records %}
-        <tr>
-          <td>{{ record.owner_name }}</td>
-          <td>{{ record.team_name }}</td>
-          <td>{{ record.year }}</td>
-          <td>{{ "{:,}".format(record.value) }}</td>
-        </tr>
-      {% endfor %}
+    {% for record in records %}
+    <tr>
+        <td>{{ record.owner_name }}</td>
+        <td>{{ record.team_name }}</td>
+        <td>{{ record.year }}</td>
+        <td>{{ "{:,}".format(record.value) }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
-  </table>
+</table>
 {% endblock %}
