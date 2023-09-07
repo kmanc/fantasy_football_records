@@ -34,7 +34,7 @@ else:
 
 app = Flask(__name__)
 Bootstrap(app)
-SORTED_OWNERS = sorted(league_instance.owners)
+SORTED_MANAGERS = sorted(league_instance.owners)
 
 
 def determine_bye_clinches(playoff_obj):
@@ -140,7 +140,7 @@ def index():
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Home",
                            welcome_message=f"Welcome to the {LEAGUE_NAME} online record book",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/snapshot")
@@ -156,7 +156,7 @@ def snapshot():
                            records=playoff_picture,
                            record_name="Current playoff snapshot",
                            seeds=seeds_as_list,
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/championships")
@@ -169,7 +169,7 @@ def championships():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Championships",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/total_regular_season_points")
@@ -181,7 +181,7 @@ def total_regular_season_points():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time regular season points",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/total_playoff_points")
@@ -194,7 +194,7 @@ def total_playoff_points():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time playoff points",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/win_percent")
@@ -207,7 +207,7 @@ def win_percents():
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Win percentage",
                            percent="%",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/playoff_appearances")
@@ -220,7 +220,7 @@ def playoff_appearances():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Playoff appearances",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/highest_regular_season")
@@ -231,7 +231,7 @@ def highest_regular_seasons():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points in one season",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/lowest_regular_season")
@@ -242,7 +242,7 @@ def lowest_regular_seasons():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points in one season",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/highest_week")
@@ -253,7 +253,7 @@ def highest_weeks():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points in one week",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/lowest_week")
@@ -264,7 +264,7 @@ def lowest_weeks():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points in one week",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/lowest_win")
@@ -275,7 +275,7 @@ def lowest_wins():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points that still won",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/highest_loss")
@@ -286,7 +286,7 @@ def highest_losses():
                            records=records_for_display,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points that still lost",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 @app.route("/head-to-head/<owner>")
@@ -297,7 +297,7 @@ def head_to_head(owner):
                                title_prefix=LEAGUE_ABBREVIATION,
                                record_name="Home",
                                welcome_message=f"Welcome to the {LEAGUE_NAME} online record book",
-                               owners=SORTED_OWNERS)
+                               owners=SORTED_MANAGERS)
     records = sorted(({"owner": opponent, "value": owner.calculate_lifetime_win_percent_against(opponent.name)}
                       for opponent in league_instance.owners.values() if opponent.name != owner.name),
                      key=lambda x: x.get("value"), reverse=True)
@@ -307,13 +307,13 @@ def head_to_head(owner):
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name=f"Win percentages for {owner.name}",
                            percent="%",
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
-@app.route("/meet_the_owners")
-def meet_the_owners():
+@app.route("/meet_the_managers")
+def meet_the_managers():
     managers = []
-    for manager in SORTED_OWNERS:
+    for manager in SORTED_MANAGERS:
         if league_instance.owners.get(manager).active:
             managers.append(
                 {'display_name': manager, 'key_name': manager.lower().replace(' ', '')}
@@ -327,7 +327,7 @@ def meet_the_owners():
                            managers=managers,
                            bios=bios,
                            meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS,
-                           owners=SORTED_OWNERS)
+                           owners=SORTED_MANAGERS)
 
 
 if __name__ == "__main__":
