@@ -94,7 +94,10 @@ class FantasyLeague:
         """ Returns active league owners """
         owner_names = set()
         for team in self.espn_objects.get(self.current_active_year).teams:
-            owner_names.add(clean_name(team.owner))
+            for owner_id in team.owners:
+                for member in self.espn_objects.get(self.current_active_year).members:
+                    if owner_id == member.get("id"):
+                        owner_names.add(clean_name(f"{member.get('firstName')} {member.get('lastName')}"))
 
         return owner_names
 
@@ -105,6 +108,9 @@ class FantasyLeague:
         """
         owners_matchups = defaultdict(lambda: defaultdict(list))
         for year, espn_object in self.espn_objects.items():
+            lookup_dict = {}
+            for member in espn_object.members:
+                lookup_dict[member.get("id")] = clean_name(f"{member.get('firstName')} {member.get('lastName')}")
             max_week = min(len(espn_object.settings.matchup_periods), espn_object.current_week)
             for week in range(1, max_week + 1):
                 scoreboard = espn_object.scoreboard(week)
@@ -113,16 +119,15 @@ class FantasyLeague:
                     continue
                 for matchup in scoreboard:
                     try:
-                        home_owner = clean_name(matchup.home_team.owner)
+                        home_owner = lookup_dict.get(matchup.home_team.owners[0])
                     except AttributeError:
                         home_owner = "BYE"
                         matchup.home_team = type('', (object,), {})()
                     try:
-                        away_owner = clean_name(matchup.away_team.owner)
+                        away_owner = lookup_dict.get(matchup.away_team.owners[0])
                     except AttributeError:
                         away_owner = "BYE"
                         matchup.away_team = type('', (object,), {})()
-
                     matchup.home_team.owner = home_owner
                     matchup.away_team.owner = away_owner
                     owners_matchups[home_owner][year].append(matchup)
@@ -136,7 +141,10 @@ class FantasyLeague:
         owner_names = set()
         for espn_object in self.espn_objects.values():
             for team in espn_object.teams:
-                owner_names.add(clean_name(team.owner))
+                for owner_id in team.owners:
+                    for member in espn_object.members:
+                        if owner_id == member.get("id"):
+                            owner_names.add(clean_name(f"{member.get('firstName')} {member.get('lastName')}"))
 
         return owner_names
 
@@ -149,9 +157,9 @@ class FantasyLeague:
         owners_teams = {}
         for year, espn_object in self.espn_objects.items():
             for team in espn_object.teams:
-                if owner_name == clean_name(team.owner):
-                    owners_teams[year] = clean_team(owner_name, year, team.team_name)
-                    # owners_teams[year] = team.team_name.replace("  ", " ").strip()
+                for member in espn_object.members:
+                    if any(member.get("id") == team_owner for team_owner in team.owners):
+                        owners_teams[year] = clean_team(owner_name, year, team.team_name)
 
         return owners_teams
 
