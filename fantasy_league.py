@@ -158,7 +158,7 @@ class FantasyLeague:
         for year, espn_object in self.espn_objects.items():
             for team in espn_object.teams:
                 for member in espn_object.members:
-                    if any(member.get("id") == team_owner for team_owner in team.owners):
+                    if any(member.get("id") == team_owner for team_owner in team.owners) and (clean_name(f"{member.get('firstName')} {member.get('lastName')}") == owner_name):
                         owners_teams[year] = clean_team(owner_name, year, team.team_name)
 
         return owners_teams
