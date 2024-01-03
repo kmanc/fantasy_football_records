@@ -40,14 +40,23 @@ class FantasyLeague:
 
 
 class Matchup:
+    lineup: set[Player]
+    opponent: Team
     outcome: GameOutcome
-    roster: set[Player]
     team: Team
     type: GameType
     week: int
 
-    def __init__(self, team):
+    def __init__(self, opponent, outcome, team, game_type, week):
+        self.opponent = opponent
+        self.outcome = outcome
         self.team = team
+        self.type = game_type
+        self.week = week
+
+    def add_player(self, player):
+        """Add a player to the matchup's lineup"""
+        self.lineup.add(player)
 
 
 class Member:
@@ -56,7 +65,7 @@ class Member:
     league: FantasyLeague
     left_year: int
     name: str
-    teams: dict[int, Team]
+    teams: set[Team]
 
     def __init__(self, league, member_id, name):
         self.id = member_id
@@ -64,12 +73,16 @@ class Member:
         self.league = league
         self.left_year = 0
         self.name = name
-        self.teams = dict()
+        self.teams = set()
+
+    def add_team(self, team):
+        """Add a new team to the member"""
+        self.teams.add(team)
 
     def same(self, other):
         """Basically Member.__eq__ but without overriding so Member.__hash__ remains untouched"""
         if isinstance(other, Member):
-            return self.id == other.id and self.name == other.name
+            return self.id == other.id
         return False
 
     def update_joined_year(self, year):
@@ -93,11 +106,35 @@ class Player:
 
 
 class Team:
+    division: int
     id: int
+    losses: int
     name: str
     matchups: set[Matchup]
     member: Member
+    ties: int
+    wins: int
+    year: int
 
-    def __init__(self, name, member):
+    def __init__(self, division, team_id, name, member, year):
+        self.division = division
+        self.id = team_id
         self.name = name
         self.member = member
+        self.year = year
+
+    def add_matchup(self, matchup):
+        """Adds a matchup to the team"""
+        self.matchups.add(matchup)
+
+    def update_losses(self, losses):
+        """Set the team's losses"""
+        self.losses = losses
+
+    def update_ties(self, ties):
+        """Set the team's ties"""
+        self.ties = ties
+
+    def update_wins(self, wins):
+        """Set the team's wins"""
+        self.wins = wins
