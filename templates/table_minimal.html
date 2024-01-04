@@ -4,14 +4,14 @@
 <table class="table table-striped" id="data">
     <thead>
     <tr>
-        <th>Team Owner</th>
+        <th>Member</th>
         <th>Value</th>
     </tr>
     </thead>
     <tbody>
     {% for record in records %}
     <tr>
-        <td>{{ record.owner_name }}</td>
+        <td>{{ record.member_name }}</td>
         <td>{{ "{:,}".format(record.value) + (percent or "") }}</td>
     </tr>
     {% endfor %}

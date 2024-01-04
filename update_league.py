@@ -175,7 +175,7 @@ for api_year in api_years:
         # Loop over the league members to find its owner
         for member in fantasy_league.members:
             # Match on the owner
-            if any(member.id == utility.clean_user_id(team_owner) for team_owner in team.owners):
+            if any(member.id == utility.clean_user_id(team_owner.get("id")) for team_owner in team.owners):
                 # Use the ESPN team ID and year to generate a true team ID
                 team_id = utility.generate_team_id(espn_id, api_year.year)
                 # If the owner already has a record of that team, update the record
@@ -288,7 +288,7 @@ for api_year in api_years:
 
 
 with open(pickle_filename, "wb") as f:
-    pickle.dump(fantasy_league, f)
+    pickle.dump(fantasy_league, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 from pprint import pprint
 # Number of people in the league
@@ -311,6 +311,13 @@ for member in fantasy_league.members:
         print("REGULAR SEASON PPG: ", member.regular_season_average_points())
         print("PLAYOFF PPG: ", member.playoff_average_points())
 
+for member in fantasy_league.members:
+    print(member.name)
+    #if member.name == "Durgan":
+    for team in member.teams:
+        print(team.year)
+        print(vars(team))
+        print(team.member.name)
 
 """
 # My 2023 team

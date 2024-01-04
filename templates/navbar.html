@@ -47,8 +47,8 @@
                     Head-to-head
                 </a>
                 <div aria-labelledby="navbarDropdownMenuLink" class="dropdown-menu">
-                    {% for owner in owners %}
-                    <a class="dropdown-item" href="/head-to-head/{{ owner }}" style="text-align:center">{{ owner }}</a>
+                    {% for member in members %}
+                    <a class="dropdown-item" href="/head-to-head/{{ member }}" style="text-align:center">{{ member }}</a>
                     {% endfor %}
                 </div>
             </li>
