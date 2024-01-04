@@ -7,8 +7,8 @@ from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
 
 import utility
-from new_fantasy_classes import FantasyLeague, Member, Team
-from new_fantasy_enums import GameType
+from new_fantasy_classes import FantasyLeague, Matchup, Member, Team
+from new_fantasy_enums import GameOutcome, GameType
 
 config = configparser.ConfigParser()
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -23,8 +23,20 @@ LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
 MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
 MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
 
-# Instantiate the league object
+# Placeholders for BYE weeks
+PLACEHOLDER_LEAGUE = FantasyLeague("", "", 99999, 99999)
+PLACEHOLDER_MEMBER = Member(weakref.proxy(PLACEHOLDER_LEAGUE), "", "")
+PLACEHOLDER_TEAM = Team(99999, 99999, "", weakref.proxy(PLACEHOLDER_MEMBER), 99999)
+
+# Create a new instance of a league from the config values
 fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
+
+# Override the new instance if one is already saved on disk
+pickle_filename = f"TEST.pickle"
+if os.path.exists(pickle_filename):
+    with open(pickle_filename, "rb") as f:
+        print("LOADING FROM DISK")
+        fantasy_league = pickle.load(f)
 
 
 def get_year_from_api(query_year):
@@ -81,11 +93,14 @@ for api_year in api_years:
 
     # Loop over the teams of the league that year and grab a few of their stats
     for team in api_year.teams:
+        # Get the ESPN-assigned team ID
+        espn_id = team.team_id
         # Loop over the league members to find its owner
         for member in fantasy_league.members:
             # Match on the owner
             if any(member.id == utility.clean_user_id(team_owner) for team_owner in team.owners):
-                team_id = utility.generate_team_id(team.team_id, api_year.year)
+                # Use the ESPN team ID and year to generate a true team ID
+                team_id = utility.generate_team_id(espn_id, api_year.year)
                 # If the owner already has a record of that team, update the record
                 for existing_team in member.teams:
                     if existing_team.id == team_id:
@@ -97,7 +112,7 @@ for api_year in api_years:
                 # Add the new team to the member
                 else:
                     team_name = utility.clean_team_name(member.name, api_year.year, team.team_name)
-                    team_object = Team(team.division_id, team_id, team_name, weakref.proxy(member), api_year.year)
+                    team_object = Team(team.division_id, espn_id, team_name, weakref.proxy(member), api_year.year)
                     team_object.update_losses(team.losses)
                     team_object.update_ties(team.ties)
                     team_object.update_wins(team.wins)
@@ -106,6 +121,9 @@ for api_year in api_years:
     # Figure out how far into the season we are
     max_week = min(len(api_year.settings.matchup_periods), api_year.current_week)
 
+    # Get the teams from the league for the given year
+    this_years_teams = {team for team in fantasy_league.team_superset() if team.year == api_year.year}
+
     # Loop over the weeks of the season that have happened or are in progress
     for week in range(1, max_week + 1):
         # Get the scoreboard for that week
@@ -113,33 +131,97 @@ for api_year in api_years:
         # If nobody has any points, the ESPN API doesn't have data for that week, so skip it
         if all(game.home_score == 0 for game in scoreboard) and all(game.away_score == 0 for game in scoreboard):
             continue
+        # Loop over the matchups for the week's scoreboard
         for matchup in scoreboard:
-            print(vars(matchup))
+            # Skip "fake" playoff games
+            if matchup.matchup_type in ["LOSERS_CONSOLATION_LADDER", "WINNERS_CONSOLATION_LADDER"]:
+                continue
+            # Set the game to be a regular season game
             matchup_type = GameType.REGULAR_SEASON
+            # Switch it to a playoff game if it matches the "real" playoff game type
             if matchup.matchup_type == "WINNERS_BRACKET":
                 matchup_type = GameType.PLAYOFF
-            print(matchup_type)
-            exit(0)
-            """try:
-                home_owner = lookup_dict.get(matchup.home_team.owners[0])
-            except AttributeError:
-                home_owner = "BYE"
-                matchup.home_team = type('', (object,), {})()
+            # Get the home team's ID
             try:
-                away_owner = lookup_dict.get(matchup.away_team.owners[0])
+                home_team_id = utility.generate_team_id(matchup.home_team.team_id, api_year.year)
+            # Or set it to None, denoting a BYE
             except AttributeError:
-                away_owner = "BYE"
-                matchup.away_team = type('', (object,), {})()
-            matchup.home_team.owner = home_owner
-            matchup.away_team.owner = away_owner
-            owners_matchups[home_owner][year].append(matchup)
-            owners_matchups[away_owner][year].append(matchup)"""
+                home_team_id = None
+            # Get the away team's ID
+            try:
+                away_team_id = utility.generate_team_id(matchup.away_team.team_id, api_year.year)
+            # Or set it to None, denoting a BYE
+            except AttributeError:
+                away_team_id = None
+            for team in this_years_teams:
+                if team.id == home_team_id:
+                    # If there was no away team, throw in a placeholder
+                    if away_team_id is None:
+                        opponent = PLACEHOLDER_TEAM
+                    # If there was an away team, find it
+                    else:
+                        opponent = [opponent for opponent in this_years_teams if opponent.id == away_team_id][0]
+                    # Set the outcome to a win
+                    outcome = GameOutcome.WIN
+                    # Change it to a loss if the away team scored more points
+                    if matchup.home_score < matchup.away_score:
+                        outcome = GameOutcome.LOSS
+                    # Or change it to a tie if the teams had the same amount of points
+                    elif matchup.home_score == matchup.away_score:
+                        outcome = GameOutcome.TIE
+                    # Create a matchup object based on the information gathered
+                    matchup_object = Matchup(opponent, outcome, matchup.away_score,
+                                             matchup.home_score, team, matchup_type, week)
+                    # If this matchup is not already in the matchup set for a given team, add it
+                    if not any(matchup_object.same(existing) for existing in team.matchups):
+                        team.add_matchup(matchup_object)
+                elif team.id == away_team_id:
+                    # If there was no away team, throw in a placeholder
+                    if home_team_id is None:
+                        opponent = PLACEHOLDER_TEAM
+                    # If there was a home team, find it
+                    else:
+                        opponent = [opponent for opponent in this_years_teams if opponent.id == home_team_id][0]
+                    # Set the outcome to a win
+                    outcome = GameOutcome.WIN
+                    # Change it to a loss if the home team scored more points
+                    if matchup.home_score > matchup.away_score:
+                        outcome = GameOutcome.LOSS
+                    # Or change it to a tie if the teams had the same amount of points
+                    elif matchup.home_score == matchup.away_score:
+                        outcome = GameOutcome.TIE
+                    # Create a matchup object based on the information gathered
+                    matchup_object = Matchup(opponent, outcome, matchup.home_score,
+                                             matchup.away_score, team, matchup_type, week)
+                    # If this matchup is not already in the matchup set for a given team, add it
+                    if not any(matchup_object.same(existing) for existing in team.matchups):
+                        team.add_matchup(matchup_object)
+
+
+with open(pickle_filename, "wb") as f:
+    pickle.dump(fantasy_league, f)
 
 from pprint import pprint
-print(len(fantasy_league.members))
-print(fantasy_league.active_year)
-print(fantasy_league.max_completed_year)
-#pprint(vars(fantasy_league))
+# Number of people in the league
+print(len(fantasy_league.members), "|| should be 14")
+# Maximum completed year for the league
+print(fantasy_league.max_completed_year, "|| should be 2023")
+# Number of games each member has played
 for member in fantasy_league.members:
-    pprint(vars(member))
+    print(member.name, "-", len(member.matchup_superset()))
+# My all-time points for
+pts = 0
+for member in fantasy_league.members:
+    if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
+        for team in member.teams:
+            for matchup in team.matchups:
+                if matchup.type == GameType.REGULAR_SEASON:
+                    pts += matchup.points_for
+print(pts)
+# My 2023 team
+for member in fantasy_league.members:
+    if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
+        for team in member.teams:
+            if team.year == 2023:
+                pprint(vars(team))
 

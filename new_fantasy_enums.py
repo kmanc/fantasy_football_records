@@ -23,11 +23,11 @@ class PlayerPosition(IntEnum):
     RB = 2
     WR = 4
     TE = 6
-    FLEX = 23
     DEFENSE = 16
     KICKER = 17
     BENCH = 20
     IR = 21
+    FLEX = 23
 
     def __repr__(self):
         return self.name

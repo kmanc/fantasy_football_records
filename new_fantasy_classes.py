@@ -1,4 +1,7 @@
 from __future__ import annotations
+from itertools import chain
+
+import utility
 from new_fantasy_enums import GameType, GameOutcome, PlayerPosition
 
 
@@ -26,6 +29,18 @@ class FantasyLeague:
         """Add a new member to the league"""
         self.members.add(member)
 
+    def player_superset(self):
+        """Gets all players from all matchups from all teams from all members in a league"""
+        return set(chain.from_iterable((member.player_superset() for member in self.members)))
+
+    def matchup_superset(self):
+        """Gets all matchups from all teams from all members in a league"""
+        return set(chain.from_iterable((member.matchup_superset() for member in self.members)))
+
+    def team_superset(self):
+        """Gets all teams from all members in a league"""
+        return set(chain.from_iterable((member.teams for member in self.members)))
+
     def update_active_year(self, year):
         """Set the league's active year to be the larger of the current active year and the year given"""
         self.active_year = max(self.active_year, year)
@@ -43,13 +58,17 @@ class Matchup:
     lineup: set[Player]
     opponent: Team
     outcome: GameOutcome
+    points_against: int
+    points_for: int
     team: Team
     type: GameType
     week: int
 
-    def __init__(self, opponent, outcome, team, game_type, week):
+    def __init__(self, opponent, outcome, points_against, points_for, team, game_type, week):
         self.opponent = opponent
         self.outcome = outcome
+        self.points_against = points_against
+        self.points_for = points_for
         self.team = team
         self.type = game_type
         self.week = week
@@ -57,6 +76,14 @@ class Matchup:
     def add_player(self, player):
         """Add a player to the matchup's lineup"""
         self.lineup.add(player)
+
+    def same(self, other):
+        """Basically Matchup.__eq__ but without overriding so Matchup.__hash__ remains untouched"""
+        if isinstance(other, Matchup):
+            me = hash(f"{self.team.name} vs {self.opponent.name} week {self.week}")
+            it = hash(f"{other.team.name} vs {other.opponent.name} week {other.week}")
+            return me == it
+        return False
 
 
 class Member:
@@ -85,6 +112,14 @@ class Member:
             return self.id == other.id
         return False
 
+    def matchup_superset(self):
+        """Gets all matchups from all teams for a member"""
+        return set(chain.from_iterable((team.matchups for team in self.teams)))
+
+    def player_superset(self):
+        """Gets all players from all matchups from all teams for a member"""
+        return set(chain.from_iterable((team.player_superset() for team in self.teams)))
+
     def update_joined_year(self, year):
         """Set the member's joined year to be the smaller of the current joined year and the year given"""
         self.joined_year = min(self.joined_year, year)
@@ -102,12 +137,13 @@ class Player:
     def __init__(self, name, points, position):
         self.name = name
         self.points = points
-        self.position = position
+        self.position = PlayerPosition(position)
 
 
 class Team:
     division: int
     id: int
+    espn_id: int
     losses: int
     name: str
     matchups: set[Matchup]
@@ -116,16 +152,22 @@ class Team:
     wins: int
     year: int
 
-    def __init__(self, division, team_id, name, member, year):
+    def __init__(self, division, espn_id, name, member, year):
         self.division = division
-        self.id = team_id
+        self.id = utility.generate_team_id(espn_id, year)
+        self.espn_id = espn_id
         self.name = name
+        self.matchups = set()
         self.member = member
         self.year = year
 
     def add_matchup(self, matchup):
         """Adds a matchup to the team"""
         self.matchups.add(matchup)
+
+    def player_superset(self):
+        """Gets all players from all matchups in a team"""
+        return set(chain.from_iterable((matchup.lineup for matchup in self.matchups)))
 
     def update_losses(self, losses):
         """Set the team's losses"""
