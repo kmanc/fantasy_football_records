@@ -34,7 +34,7 @@ PLACEHOLDER_TEAM = Team(99999, 99999, "", weakref.proxy(PLACEHOLDER_MEMBER), 999
 fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
 
 # Override the new instance if one is already saved on disk
-pickle_filename = f"TEST.pickle"
+pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
         print("LOADING FROM DISK")
@@ -299,15 +299,19 @@ print(fantasy_league.max_completed_year, "|| should be 2023")
 # Number of games each member has played
 for member in fantasy_league.members:
     print(member.name, "-", len(member.matchup_superset()))
+"""
 # My all-time points for
-pts = 0
 for member in fantasy_league.members:
     if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
-        for team in member.teams:
-            for matchup in team.matchups:
-                if matchup.type == GameType.REGULAR_SEASON:
-                    pts += matchup.points_for
-print(pts)
+        print("REGULAR SEASON POINTS: ", member.regular_season_points())
+        print("PLAYOFF POINTS: ", member.playoff_points())
+        print("PLAYOFF APPEARANCES: ", member.playoff_appearances())
+        print("WIN %: ", member.regular_season_win_percentage())
+        print("CHAMPIONSHIPS: ", member.championship_wins())
+        print("REGULAR SEASON PPG: ", member.regular_season_average_points())
+        print("PLAYOFF PPG: ", member.playoff_average_points())
+
+
 """
 # My 2023 team
 for member in fantasy_league.members:
@@ -315,8 +319,9 @@ for member in fantasy_league.members:
         for team in member.teams:
             if team.year == 2023:
                 for matchup in team.matchups:
+                    print(matchup.week)
                     for player in matchup.lineup:
-                        print(matchup.week)
                         pprint(vars(player))
                     exit(0)
+"""
 

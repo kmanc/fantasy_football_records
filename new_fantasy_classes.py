@@ -107,6 +107,10 @@ class Member:
         """Add a new team to the member"""
         self.teams.add(team)
 
+    def championship_wins(self):
+        """Calculates the number of championship wins for a member"""
+        return len(list(team for team in self.teams if team.won_championship()))
+
     def same(self, other):
         """Basically Member.__eq__ but without overriding so Member.__hash__ remains untouched"""
         if isinstance(other, Member):
@@ -120,6 +124,50 @@ class Member:
     def player_superset(self):
         """Gets all players from all matchups from all teams for a member"""
         return set(chain.from_iterable((team.player_superset() for team in self.teams)))
+
+    def playoff_appearances(self):
+        """Calculates the playoff appearances for a member"""
+        return len([team for team in self.teams if team.made_playoffs()])
+
+    def playoff_average_points(self):
+        """Calculates the average points scored per playoff game for a member"""
+        return round(self.playoff_points() / len(list(self.playoff_matchups())), 2)
+
+    def playoff_matchups(self):
+        """Gets all regular season matchups for a member"""
+        return (matchup for matchup in self.matchup_superset() if matchup.type == GameType.PLAYOFF)
+
+    def playoff_points(self):
+        """Calculates the all-time playoff points for a member"""
+        return round(sum(matchup.points_for for matchup in self.playoff_matchups()), 2)
+
+    def playoff_win_percentage(self):
+        """Calculates the playoff win percentage for a member"""
+        return round(self.playoff_wins() * 100 / len(list(self.playoff_matchups())), 2)
+
+    def playoff_wins(self):
+        """Calculates the number of playoff wins for a member"""
+        return len(list(matchup for matchup in self.playoff_matchups() if matchup.outcome == GameOutcome.WIN))
+
+    def regular_season_average_points(self):
+        """Calculates the average points scored per regular season game for a member"""
+        return round(self.regular_season_points() / len(list(self.regular_season_matchups())), 2)
+
+    def regular_season_matchups(self):
+        """Gets all regular season matchups for a member"""
+        return (matchup for matchup in self.matchup_superset() if matchup.type == GameType.REGULAR_SEASON)
+
+    def regular_season_points(self):
+        """Calculates the all-time regular season points for a member"""
+        return round(sum(matchup.points_for for matchup in self.regular_season_matchups()), 2)
+
+    def regular_season_win_percentage(self):
+        """Calculates the regular season win percentage for a member"""
+        return round(self.regular_season_wins() * 100 / len(list(self.regular_season_matchups())), 2)
+
+    def regular_season_wins(self):
+        """Calculates the number of regular season wins for a member"""
+        return len(list(matchup for matchup in self.regular_season_matchups() if matchup.outcome == GameOutcome.WIN))
 
     def update_joined_year(self, year):
         """Set the member's joined year to be the smaller of the current joined year and the year given"""
@@ -168,9 +216,25 @@ class Team:
         """Adds a matchup to the team"""
         self.matchups.add(matchup)
 
+    def made_playoffs(self):
+        """Returns a boolean representing whether the team made the playoffs"""
+        return any(matchup.type == GameType.PLAYOFF for matchup in self.matchups)
+
     def player_superset(self):
         """Gets all players from all matchups in a team"""
         return set(chain.from_iterable((matchup.lineup for matchup in self.matchups)))
+
+    def playoff_points_scored(self):
+        """Calculates the playoff points scored for a team"""
+        return sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.PLAYOFF)
+
+    def regular_season_points_against(self):
+        """Calculates the regular season points scored for a team"""
+        return sum(matchup.points_against for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON)
+
+    def regular_season_points_scored(self):
+        """Calculates the regular season points scored for a team"""
+        return sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON)
 
     def update_losses(self, losses):
         """Set the team's losses"""
@@ -183,3 +247,8 @@ class Team:
     def update_wins(self, wins):
         """Set the team's wins"""
         self.wins = wins
+
+    def won_championship(self):
+        """Returns a boolean representing whether the team won the championship"""
+        last_game = sorted(self.matchups, key=lambda matchup: matchup.week, reverse=True)[0]
+        return last_game.type == GameType.PLAYOFF and last_game.outcome == GameOutcome.WIN
