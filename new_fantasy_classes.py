@@ -65,6 +65,7 @@ class Matchup:
     week: int
 
     def __init__(self, opponent, outcome, points_against, points_for, team, game_type, week):
+        self.lineup = set()
         self.opponent = opponent
         self.outcome = outcome
         self.points_against = points_against
@@ -130,13 +131,15 @@ class Member:
 
 
 class Player:
+    id: int
     name: str
     points: int
     position: PlayerPosition
 
-    def __init__(self, name, points, position):
+    def __init__(self, espn_id, name, points, position):
+        self.id = espn_id
         self.name = name
-        self.points = points
+        self.points = round(points, ndigits=2)
         self.position = PlayerPosition(position)
 
 

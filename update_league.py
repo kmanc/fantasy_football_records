@@ -1,13 +1,15 @@
 import configparser
 import os
 import pickle
+import requests
 import weakref
+from collections import defaultdict
 from datetime import date
 from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
 
 import utility
-from new_fantasy_classes import FantasyLeague, Matchup, Member, Team
+from new_fantasy_classes import FantasyLeague, Matchup, Member, Player, Team
 from new_fantasy_enums import GameOutcome, GameType
 
 config = configparser.ConfigParser()
@@ -37,6 +39,81 @@ if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
         print("LOADING FROM DISK")
         fantasy_league = pickle.load(f)
+
+
+def fetch_player_data(league_id, espn_s2, espn_swid, fetch_year, fetch_week):
+    """Gets name, points, position_id, and team for players in the given year/week combination.
+    Data not available prior to 2018. Returns data as a defaultdict[week: list[Player]]"""
+
+    # Start a defaultdict for the results
+    output_data = defaultdict(list)
+    # This data is not available prior to 2018
+    if fetch_year < 2018:
+        return output_data
+
+    endpoint = f"https://fantasy.espn.com/apis/v3/games/ffl/seasons/{fetch_year}/segments/0/leagues/{league_id}"
+    params = {
+        "view": "mRoster",
+        "scoringPeriodId": fetch_week,
+    }
+    cookies = {
+        'swid': espn_swid,
+        'espn_s2': espn_s2
+    }
+    # Rostered players that week
+    rostered = []
+    r = requests.get(endpoint, params=params, cookies=cookies)
+    if r.status_code != 200:
+        print("year: ", fetch_year, "week: ", fetch_week, "returned an HTTP", r.status_code)
+        return output_data
+
+    result = r.json()
+    # Loop over the teams' rosters
+    for fetch_team in result.get("teams"):
+        for entry in fetch_team.get("roster").get("entries"):
+            # Add the data that can be pulled from this endpoint
+            rostered.append({
+                "name": None,
+                "on_team": fetch_team.get("id"),
+                "player_id": entry.get("playerId"),
+                "points": None,
+                "position_id": entry.get("lineupSlotId"),
+            })
+
+    params = {
+        "view": "mMatchup",
+        "scoringPeriodId": fetch_week,
+    }
+    r = requests.get(endpoint, params=params, cookies=cookies)
+    if r.status_code != 200:
+        print("year: ", fetch_year, "week: ", fetch_week, "returned an HTTP", r.status_code)
+        return output_data
+
+    # Create a list of scheduled players
+    scheduled = []
+    # Get players who were played and players who were benched
+    result = r.json()
+    for game in result.get("schedule"):
+        scheduled.extend(game.get("home", {}).get("rosterForCurrentScoringPeriod", {}).get("entries", []))
+        scheduled.extend(game.get("away", {}).get("rosterForCurrentScoringPeriod", {}).get("entries", []))
+
+    # Enrich the rostered players with the scheduled players (only fully works in 2018 or later)
+    for rostered_player in rostered:
+        for scheduled_player in scheduled:
+            if scheduled_player.get("playerId") == rostered_player.get("player_id"):
+                rostered_player["name"] = scheduled_player.get("playerPoolEntry").get("player").get("fullName")
+                rostered_player["points"] = scheduled_player.get("playerPoolEntry").get("appliedStatTotal")
+
+    # Use the data we put together to create a player object
+    for rostered_player in rostered:
+        if rostered_player.get("name"):
+            player_object = Player(rostered_player.get("player_id"),
+                                   rostered_player.get("name"),
+                                   rostered_player.get("points"),
+                                   rostered_player.get("position_id"))
+            output_data[rostered_player.get("on_team")].append(player_object)
+
+    return output_data
 
 
 def get_year_from_api(query_year):
@@ -131,6 +208,8 @@ for api_year in api_years:
         # If nobody has any points, the ESPN API doesn't have data for that week, so skip it
         if all(game.home_score == 0 for game in scoreboard) and all(game.away_score == 0 for game in scoreboard):
             continue
+        # Get the custom-built player data for that week
+        player_data = fetch_player_data(fantasy_league.id, fantasy_league.espn_s2, fantasy_league.espn_swid, api_year.year, week)
         # Loop over the matchups for the week's scoreboard
         for matchup in scoreboard:
             # Skip "fake" playoff games
@@ -172,6 +251,11 @@ for api_year in api_years:
                     # Create a matchup object based on the information gathered
                     matchup_object = Matchup(opponent, outcome, matchup.away_score,
                                              matchup.home_score, team, matchup_type, week)
+                    # Add the players for the team into the matchup object IF IT EXISTS
+                    # Remember that prior to 2018 this data doesn't exist
+                    if player_data:
+                        for player in player_data.get(matchup.home_team.team_id):
+                            matchup_object.add_player(player)
                     # If this matchup is not already in the matchup set for a given team, add it
                     if not any(matchup_object.same(existing) for existing in team.matchups):
                         team.add_matchup(matchup_object)
@@ -193,6 +277,11 @@ for api_year in api_years:
                     # Create a matchup object based on the information gathered
                     matchup_object = Matchup(opponent, outcome, matchup.home_score,
                                              matchup.away_score, team, matchup_type, week)
+                    # Add the players for the team into the matchup object IF IT EXISTS
+                    # Remember that prior to 2018 this data doesn't exist
+                    if player_data:
+                        for player in player_data.get(matchup.away_team.team_id):
+                            matchup_object.add_player(player)
                     # If this matchup is not already in the matchup set for a given team, add it
                     if not any(matchup_object.same(existing) for existing in team.matchups):
                         team.add_matchup(matchup_object)
@@ -206,6 +295,7 @@ from pprint import pprint
 print(len(fantasy_league.members), "|| should be 14")
 # Maximum completed year for the league
 print(fantasy_league.max_completed_year, "|| should be 2023")
+""""
 # Number of games each member has played
 for member in fantasy_league.members:
     print(member.name, "-", len(member.matchup_superset()))
@@ -218,10 +308,15 @@ for member in fantasy_league.members:
                 if matchup.type == GameType.REGULAR_SEASON:
                     pts += matchup.points_for
 print(pts)
+"""
 # My 2023 team
 for member in fantasy_league.members:
     if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
         for team in member.teams:
             if team.year == 2023:
-                pprint(vars(team))
+                for matchup in team.matchups:
+                    for player in matchup.lineup:
+                        print(matchup.week)
+                        pprint(vars(player))
+                    exit(0)
 
