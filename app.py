@@ -18,7 +18,7 @@ FIRST_YEAR = int(config["ESPN"]["league_founded"])
 LEAGUE_NAME = config["WEBSITE"]["league_name"].replace('"', '')
 LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
 MEET_THE_MANAGERS_ASSETS = os.path.join("static/meet_the_managers")
-MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS,"manager_bios.json")
+MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, "manager_bios.json")
 
 pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
@@ -73,9 +73,10 @@ def snapshot():
 
 @app.route("/championships")
 def championships():
-    members = sorted((member for member in fantasy_league.members if member.championship_wins()),
-                     key=lambda member: member.championship_wins(), reverse=True)
-    records = [{"member": format_member_for_display(member), "value": member.championship_wins()} for member in members]
+    records = [{"member": format_member_for_display(member),
+                "value": member.championship_wins(), }
+               for member in
+               sorted(fantasy_league.members_with_championship(), key=lambda member: member.championship_wins(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -85,9 +86,9 @@ def championships():
 
 @app.route("/total_regular_season_points")
 def total_regular_season_points():
-    members = sorted((member for member in fantasy_league.members),
-                     key=lambda member: member.regular_season_points(), reverse=True)
-    records = [{"member": format_member_for_display(member), "value": member.regular_season_points()} for member in members]
+    records = [{"member": format_member_for_display(member),
+                "value": member.regular_season_points()}
+               for member in sorted((member for member in fantasy_league.members), key=lambda member: member.regular_season_points(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -97,9 +98,10 @@ def total_regular_season_points():
 
 @app.route("/total_playoff_points")
 def total_playoff_points():
-    members = sorted((member for member in fantasy_league.members if member.playoff_points()),
-                     key=lambda member: member.playoff_points(), reverse=True)
-    records = [{"member": format_member_for_display(member), "value": member.playoff_points()} for member in members]
+    records = [{"member": format_member_for_display(member),
+                "value": member.playoff_points()}
+               for member in
+               sorted((member for member in fantasy_league.members_with_playoff_appearances()), key=lambda member: member.playoff_points(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -109,9 +111,10 @@ def total_playoff_points():
 
 @app.route("/win_percent")
 def win_percents():
-    members = sorted((member for member in fantasy_league.members),
-                     key=lambda member: member.regular_season_win_percentage(), reverse=True)
-    records = [{"member": format_member_for_display(member), "value": member.regular_season_win_percentage()} for member in members]
+    records = [{"member": format_member_for_display(member),
+                "value": member.regular_season_win_percentage(), }
+               for member in
+               sorted(fantasy_league.members, key=lambda member: member.regular_season_win_percentage(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -122,9 +125,9 @@ def win_percents():
 
 @app.route("/playoff_appearances")
 def playoff_appearances():
-    members = sorted((member for member in fantasy_league.members if member.playoff_appearances()),
-                     key=lambda member: member.playoff_appearances(), reverse=True)
-    records = [{"member": format_member_for_display(member), "value": member.playoff_appearances()} for member in members]
+    records = [{"member": format_member_for_display(member),
+                "value": member.playoff_appearances(), }
+               for member in sorted(fantasy_league.members_with_championship(), key=lambda member: member.playoff_appearances(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -134,13 +137,11 @@ def playoff_appearances():
 
 @app.route("/highest_regular_season")
 def highest_regular_seasons():
-    teams = sorted((team for team in fantasy_league.team_superset()),
-                   key=lambda team: team.regular_season_points_scored(), reverse=True)
     records = [{"member": format_member_for_display(team.member),
                 "team": team.name,
                 "value": team.regular_season_points_scored(),
-                "year": team.year}
-               for team in teams][:10]
+                "year": team.year, }
+               for team in fantasy_league.teams_by_regular_season_points_for()[:10]]
     return render_template("table_no_week.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -150,13 +151,11 @@ def highest_regular_seasons():
 
 @app.route("/lowest_regular_season")
 def lowest_regular_seasons():
-    teams = sorted((team for team in fantasy_league.team_superset()),
-                   key=lambda team: team.regular_season_points_scored())
     records = [{"member": format_member_for_display(team.member),
                 "team": team.name,
                 "value": team.regular_season_points_scored(),
-                "year": team.year}
-               for team in teams][:10]
+                "year": team.year, }
+               for team in fantasy_league.teams_by_regular_season_points_for()[:-10:-1]]
     return render_template("table_no_week.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -164,16 +163,42 @@ def lowest_regular_seasons():
                            members=SORTED_MANAGERS)
 
 
+@app.route("/best_defense")
+def best_defenses():
+    records = [{"member": format_member_for_display(team.member),
+                "team": team.name,
+                "value": team.regular_season_points_against(),
+                "year": team.year, }
+               for team in fantasy_league.teams_by_regular_season_points_against()[:-10:-1]]
+    return render_template("table_no_week.html",
+                           records=records,
+                           title_prefix=LEAGUE_ABBREVIATION,
+                           record_name="Least points against in one season",
+                           members=SORTED_MANAGERS)
+
+
+@app.route("/worst_defense")
+def worst_defenses():
+    records = [{"member": format_member_for_display(team.member),
+                "team": team.name,
+                "value": team.regular_season_points_against(),
+                "year": team.year, }
+               for team in fantasy_league.teams_by_regular_season_points_against()[:10]]
+    return render_template("table_no_week.html",
+                           records=records,
+                           title_prefix=LEAGUE_ABBREVIATION,
+                           record_name="Most points against in one season",
+                           members=SORTED_MANAGERS)
+
+
 @app.route("/highest_week")
 def highest_weeks():
-    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset()),
-                      key=lambda matchup: matchup.points_for, reverse=True)
     records = [{"member": format_member_for_display(matchup.team.member),
                 "team": matchup.team.name,
                 "value": matchup.points_for,
                 "week": matchup.week,
-                "year": matchup.team.year}
-               for matchup in matchups][:10]
+                "year": matchup.team.year, }
+               for matchup in fantasy_league.matchups_by_points_for()[:10]]
     return render_template("table_full.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -183,14 +208,12 @@ def highest_weeks():
 
 @app.route("/lowest_week")
 def lowest_weeks():
-    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset()),
-                      key=lambda matchup: matchup.points_for)
     records = [{"member": format_member_for_display(matchup.team.member),
                 "team": matchup.team.name,
                 "value": matchup.points_for,
                 "week": matchup.week,
-                "year": matchup.team.year}
-               for matchup in matchups][:10]
+                "year": matchup.team.year, }
+               for matchup in fantasy_league.matchups_by_points_for()[:-10:-1]]
     return render_template("table_full.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -253,7 +276,7 @@ def head_to_head(member_name):
                 try:
                     winrate = round(wins * 100 / len(games_against), 2)
                     winrates.append({
-                        "member": opponent.name,
+                        "member": format_member_for_display(opponent),
                         "value": winrate
                     })
                 except ZeroDivisionError:

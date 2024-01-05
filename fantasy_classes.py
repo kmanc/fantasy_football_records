@@ -33,13 +33,37 @@ class FantasyLeague:
         """Gets all players from all matchups from all teams from all members in a league"""
         return set(chain.from_iterable((member.player_superset() for member in self.members)))
 
+    def members_with_championship(self):
+        """Returns members who have won a championship"""
+        return (member for member in self.members if member.championship_wins())
+
+    def members_with_playoff_appearances(self):
+        """Returns members who have made the playoffs at least once"""
+        return (member for member in self.members if member.playoff_appearances())
+
     def matchup_superset(self):
         """Gets all matchups from all teams from all members in a league"""
         return set(chain.from_iterable((member.matchup_superset() for member in self.members)))
 
+    def matchups_by_points_for(self):
+        """Sorts all matchups by points scored"""
+        return sorted(self.matchup_superset(), key=lambda matchup: matchup.points_for, reverse=True)
+
     def team_superset(self):
         """Gets all teams from all members in a league"""
         return set(chain.from_iterable((member.teams for member in self.members)))
+
+    def teams_in_active_year(self):
+        """Gets all teams for the active year"""
+        return set(team for team in self.team_superset() if team.year == self.active_year)
+
+    def teams_by_regular_season_points_against(self):
+        """Sorts all teams in league by points_against"""
+        return sorted(self.team_superset(), key=lambda team: team.regular_season_points_against(), reverse=True)
+
+    def teams_by_regular_season_points_for(self):
+        """Sorts all teams in league by points_for"""
+        return sorted(self.team_superset(), key=lambda team: team.regular_season_points_scored(), reverse=True)
 
     def update_active_year(self, year):
         """Set the league's active year to be the larger of the current active year and the year given"""
