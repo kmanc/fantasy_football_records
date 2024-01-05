@@ -2,16 +2,14 @@ import configparser
 import json
 import os
 import pickle
-from copy import deepcopy
-
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
 
-from fantasy_league import FantasyLeague
+from fantasy_enums import GameOutcome
 
 config = configparser.ConfigParser()
 dir_path = os.path.dirname(os.path.realpath(__file__))
-config.read(f'{dir_path}/config.ini')
+config.read(f"{dir_path}/config.ini")
 
 S2 = config["ESPN"]["s2"]
 SWID = config["ESPN"]["swid"]
@@ -19,114 +17,34 @@ LEAGUE_ID = int(config["ESPN"]["league_id"])
 FIRST_YEAR = int(config["ESPN"]["league_founded"])
 LEAGUE_NAME = config["WEBSITE"]["league_name"].replace('"', '')
 LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
-MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
-MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
+MEET_THE_MANAGERS_ASSETS = os.path.join("static/meet_the_managers")
+MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS,"manager_bios.json")
 
 pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
-        league_instance = pickle.load(f)
-        league_instance.update_espn_objects()
-        league_instance.save_to_file(pickle_filename)
+        fantasy_league = pickle.load(f)
 else:
-    league_instance = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
-    league_instance.save_to_file(pickle_filename)
+    print(f"Could not find pickled league instance at {pickle_filename}")
+    exit(1)
 
 app = Flask(__name__)
 Bootstrap(app)
-SORTED_MANAGERS = sorted(league_instance.owners)
+SORTED_MANAGERS = sorted(member.name for member in fantasy_league.members)
 
 
-def determine_bye_clinches(playoff_obj):
-    simulation = deepcopy(league_instance)
-    number_of_byes = 2
-    current_byes = list(playoff_obj.keys())[:number_of_byes]
-
-    for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
-        if team.team_name in current_byes:
-            team.points_for = -1
-        for outcome_index, outcome in enumerate(team.outcomes):
-            if outcome == "U" and team.team_name in current_byes:
-                team.outcomes[outcome_index] = "L"
-            elif outcome == "U" and team.team_name not in current_byes:
-                team.outcomes[outcome_index] = "W"
-
-    simulation_picture = simulation.get_wffl_playoff_picture()
-    simulation_byes = list(simulation_picture.keys())[:number_of_byes]
-
-    for current_bye in current_byes:
-        if current_bye in simulation_byes:
-            playoff_obj[current_bye]["clinched"] = "** (clinched bye)"
-
-    # I don't know if this is necessary but I'm trying to prevent carrying around large copied objects
-    del simulation
-
-    return playoff_obj
-
-
-def determine_division_clinches(playoff_obj):
-    simulation = deepcopy(league_instance)
-    number_of_divisions = len(simulation.espn_objects.get(max(simulation.espn_objects)).settings.division_map)
-    current_leads = list(playoff_obj.keys())[:number_of_divisions]
-
-    for team in simulation.espn_objects.get(max(simulation.espn_objects)).teams:
-        if team.team_name in current_leads:
-            team.points_for = -1
-        for outcome_index, outcome in enumerate(team.outcomes):
-            if outcome == "U" and team.team_name in current_leads:
-                team.outcomes[outcome_index] = "L"
-            elif outcome == "U" and team.team_name not in current_leads:
-                team.outcomes[outcome_index] = "W"
-
-    simulation_picture = simulation.get_wffl_playoff_picture()
-    simulation_leads = list(simulation_picture.keys())[:number_of_divisions]
-
-    for current_lead in current_leads:
-        if current_lead in simulation_leads:
-            playoff_obj[current_lead]["clinched"] = "* (clinched division)"
-
-    # I don't know if this is necessary but I'm trying to prevent carrying around large copied objects
-    del simulation
-
-    return playoff_obj
-
-
-def format_owner_for_display(owner_obj):
-    if owner_obj.active and owner_obj.joined == league_instance.founded:
-        return owner_obj.name
-    elif owner_obj.active:
-        return f"{owner_obj.name}\N{ASTERISK} (Joined {owner_obj.joined})"
-    return f"{owner_obj.name}\N{ASTERISK} ({owner_obj.joined} - {max(owner_obj.teams)})"
-
-
-def format_weekly_records_for_display(records_obj):
-    formatted = deepcopy(records_obj)
-    for record in formatted:
-        record["value"] = round(record.get("score"), 2)
-        record["owner_name"] = format_owner_for_display(league_instance.owners.get(record.get("owner_name")))
-
-    return formatted
-
-
-def format_season_records_for_display(records_obj):
-    formatted = deepcopy(records_obj)
-    for record in formatted:
-        record["value"] = round(record.get("points"), 2)
-        record["owner_name"] = format_owner_for_display(record.get("owner"))
-
-    return formatted
-
-
-def format_lifetime_records_for_display(records_obj, percent=False):
-    formatted = deepcopy(records_obj)
-    for record in formatted:
-        if percent:
-            record["value"] = round(record.get("value") * 100, 2)
-        else:
-            record["value"] = round(record.get("value"), 2)
-        record["owner_name"] = format_owner_for_display(record.get("owner"))
-
-    return formatted
+def format_member_for_display(member_obj):
+    # Member was a founding member of the league and is still active
+    if member_obj.joined_year == fantasy_league.founded_year and member_obj.left_year == fantasy_league.active_year:
+        return member_obj.name
+    # Member was a founding member of the league but is no longer active
+    if member_obj.joined_year == fantasy_league.founded_year and member_obj.left_year < fantasy_league.active_year:
+        return f"{member_obj.name}\N{ASTERISK} (Left {member_obj.left_year})"
+    # Member joined the league after it was founded, but is still active
+    elif member_obj.left_year == fantasy_league.active_year:
+        return f"{member_obj.name}\N{ASTERISK} (Joined {member_obj.joined_year})"
+    # Member joined the league after it was founded, and is no longer active
+    return f"{member_obj.name}\N{ASTERISK} ({member_obj.joined_year} - {member_obj.left_year})"
 
 
 @app.context_processor
@@ -136,198 +54,223 @@ def handle_context():
 
 @app.route("/")
 def index():
-    return render_template('index.html',
+    return render_template("index.html",
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Home",
                            welcome_message=f"Welcome to the {LEAGUE_NAME} online record book",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/snapshot")
 def snapshot():
-    playoff_picture = league_instance.get_wffl_playoff_picture()
-    playoff_picture = determine_division_clinches(playoff_picture)
-    playoff_picture = determine_bye_clinches(playoff_picture)
-    number_of_playoff_teams = league_instance.espn_objects.get(
-        league_instance.current_active_year).settings.playoff_team_count
-    seeds_as_list = list(playoff_picture.keys())[:number_of_playoff_teams]
     return render_template('snapshot.html',
                            title_prefix=LEAGUE_ABBREVIATION,
-                           records=playoff_picture,
+                           records=[],
                            record_name="Current playoff snapshot",
-                           seeds=seeds_as_list,
+                           seeds=[],
                            owners=SORTED_MANAGERS)
 
 
 @app.route("/championships")
 def championships():
-    records = sorted(({"owner": owner, "value": owner.calculate_championship_wins(league_instance.max_completed_year)}
-                      for owner in league_instance.owners.values() if owner.calculate_championship_wins() > 0),
-                     key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    members = sorted((member for member in fantasy_league.members if member.championship_wins()),
+                     key=lambda member: member.championship_wins(), reverse=True)
+    records = [{"member": format_member_for_display(member), "value": member.championship_wins()} for member in members]
+    return render_template("table_minimal.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Championships",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/total_regular_season_points")
 def total_regular_season_points():
-    records = sorted(({"owner": owner, "value": owner.calculate_lifetime_regular_season_points()} for owner in
-                      league_instance.owners.values()), key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    members = sorted((member for member in fantasy_league.members),
+                     key=lambda member: member.regular_season_points(), reverse=True)
+    records = [{"member": format_member_for_display(member), "value": member.regular_season_points()} for member in members]
+    return render_template("table_minimal.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time regular season points",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/total_playoff_points")
 def total_playoff_points():
-    records = sorted(({"owner": owner, "value": owner.calculate_lifetime_playoff_points()} for owner in
-                      league_instance.owners.values() if owner.calculate_lifetime_playoff_points() > 0),
-                     key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    members = sorted((member for member in fantasy_league.members if member.playoff_points()),
+                     key=lambda member: member.playoff_points(), reverse=True)
+    records = [{"member": format_member_for_display(member), "value": member.playoff_points()} for member in members]
+    return render_template("table_minimal.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time playoff points",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/win_percent")
 def win_percents():
-    records = sorted(({"owner": owner, "value": owner.calculate_lifetime_win_percent()} for owner in
-                      league_instance.owners.values()), key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records, percent=True)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    members = sorted((member for member in fantasy_league.members),
+                     key=lambda member: member.regular_season_win_percentage(), reverse=True)
+    records = [{"member": format_member_for_display(member), "value": member.regular_season_win_percentage()} for member in members]
+    return render_template("table_minimal.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Win percentage",
                            percent="%",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/playoff_appearances")
 def playoff_appearances():
-    records = sorted(({"owner": owner, "value": owner.calculate_playoff_appearances()} for owner in
-                      league_instance.owners.values() if owner.calculate_playoff_appearances() > 0),
-                     key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    members = sorted((member for member in fantasy_league.members if member.playoff_appearances()),
+                     key=lambda member: member.playoff_appearances(), reverse=True)
+    records = [{"member": format_member_for_display(member), "value": member.playoff_appearances()} for member in members]
+    return render_template("table_minimal.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Playoff appearances",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/highest_regular_season")
 def highest_regular_seasons():
-    records = league_instance.calculate_highest_regular_season_points()
-    records_for_display = format_season_records_for_display(records)
-    return render_template('table_no_week.html',
-                           records=records_for_display,
+    teams = sorted((team for team in fantasy_league.team_superset()),
+                   key=lambda team: team.regular_season_points_scored(), reverse=True)
+    records = [{"member": format_member_for_display(team.member),
+                "team": team.name,
+                "value": team.regular_season_points_scored(),
+                "year": team.year}
+               for team in teams][:10]
+    return render_template("table_no_week.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points in one season",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/lowest_regular_season")
 def lowest_regular_seasons():
-    records = league_instance.calculate_lowest_regular_season_points()
-    records_for_display = format_season_records_for_display(records)
-    return render_template('table_no_week.html',
-                           records=records_for_display,
+    teams = sorted((team for team in fantasy_league.team_superset()),
+                   key=lambda team: team.regular_season_points_scored())
+    records = [{"member": format_member_for_display(team.member),
+                "team": team.name,
+                "value": team.regular_season_points_scored(),
+                "year": team.year}
+               for team in teams][:10]
+    return render_template("table_no_week.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points in one season",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/highest_week")
 def highest_weeks():
-    records = league_instance.calculate_highest_single_week_points()
-    records_for_display = format_weekly_records_for_display(records)
-    return render_template('table_full.html',
-                           records=records_for_display,
+    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset()),
+                      key=lambda matchup: matchup.points_for, reverse=True)
+    records = [{"member": format_member_for_display(matchup.team.member),
+                "team": matchup.team.name,
+                "value": matchup.points_for,
+                "week": matchup.week,
+                "year": matchup.team.year}
+               for matchup in matchups][:10]
+    return render_template("table_full.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points in one week",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/lowest_week")
 def lowest_weeks():
-    records = league_instance.calculate_lowest_single_week_points()
-    records_for_display = format_weekly_records_for_display(records)
-    return render_template('table_full.html',
-                           records=records_for_display,
+    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset()),
+                      key=lambda matchup: matchup.points_for)
+    records = [{"member": format_member_for_display(matchup.team.member),
+                "team": matchup.team.name,
+                "value": matchup.points_for,
+                "week": matchup.week,
+                "year": matchup.team.year}
+               for matchup in matchups][:10]
+    return render_template("table_full.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points in one week",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/lowest_win")
 def lowest_wins():
-    records = league_instance.calculate_lowest_win_points()
-    records_for_display = format_weekly_records_for_display(records)
-    return render_template('table_full.html',
-                           records=records_for_display,
+    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset() if matchup.outcome == GameOutcome.WIN),
+                      key=lambda matchup: matchup.points_for)
+    records = [{"member": format_member_for_display(matchup.team.member),
+                "team": matchup.team.name,
+                "value": matchup.points_for,
+                "week": matchup.week,
+                "year": matchup.team.year}
+               for matchup in matchups][:10]
+    return render_template("table_full.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Least points that still won",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/highest_loss")
 def highest_losses():
-    records = league_instance.calculate_highest_loss_points()
-    records_for_display = format_weekly_records_for_display(records)
-    return render_template('table_full.html',
-                           records=records_for_display,
+    matchups = sorted((matchup for matchup in fantasy_league.matchup_superset() if matchup.outcome == GameOutcome.LOSS),
+                      key=lambda matchup: matchup.points_for, reverse=True)
+    records = [{"member": format_member_for_display(matchup.team.member),
+                "team": matchup.team.name,
+                "value": matchup.points_for,
+                "week": matchup.week,
+                "year": matchup.team.year}
+               for matchup in matchups][:10]
+    return render_template("table_full.html",
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="Most points that still lost",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
-@app.route("/head-to-head/<owner>")
-def head_to_head(owner):
-    owner = league_instance.owners.get(owner.strip().title())
-    if owner is None:
-        return render_template('index.html',
+@app.route("/head-to-head/<member>")
+def head_to_head(member):
+    """
+    member = fantasy_league.members.get(member.strip().title())
+    if member is None:
+        return render_template("index.html",
                                title_prefix=LEAGUE_ABBREVIATION,
                                record_name="Home",
                                welcome_message=f"Welcome to the {LEAGUE_NAME} online record book",
-                               owners=SORTED_MANAGERS)
-    records = sorted(({"owner": opponent, "value": owner.calculate_lifetime_win_percent_against(opponent.name)}
-                      for opponent in league_instance.owners.values() if opponent.name != owner.name),
+                               members=SORTED_MANAGERS)
+    records = sorted(({"member": opponent, "value": member.calculate_lifetime_win_percent_against(opponent.name)}
+                      for opponent in fantasy_league.members.values() if opponent.name != member.name),
                      key=lambda x: x.get("value"), reverse=True)
-    records_for_display = format_lifetime_records_for_display(records, percent=True)
-    return render_template('table_minimal.html',
-                           records=records_for_display,
+    """
+    return render_template("table_minimal.html",
+                           records=[],
                            title_prefix=LEAGUE_ABBREVIATION,
-                           record_name=f"Win percentages for {owner.name}",
+                           record_name=f"Win percentages for {member}",
                            percent="%",
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/meet_the_managers")
 def meet_the_managers():
     managers = []
-    for manager in SORTED_MANAGERS:
-        if league_instance.owners.get(manager).active:
-            managers.append(
-                {'display_name': manager, 'key_name': manager.lower().replace(' ', '')}
-            )
+    for name in sorted(member.name for member in fantasy_league.members if member.left_year == fantasy_league.active_year):
+        managers.append(
+            {"display_name": name, "key_name": name.lower().replace(" ", "")}
+        )
 
-    with open(MANAGER_BIOS_PATH, 'r') as f:
-        bios = json.loads(f.read())
+    with open(MANAGER_BIOS_PATH, "r") as g:
+        bios = json.loads(g.read())
 
-    return render_template('meet_the_managers.html',
+    return render_template("meet_the_managers.html",
                            title_prefix=LEAGUE_ABBREVIATION,
                            managers=managers,
                            bios=bios,
                            meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS,
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 if __name__ == "__main__":

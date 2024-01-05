@@ -2,15 +2,14 @@ import configparser
 import os
 import pickle
 import requests
-import weakref
 from collections import defaultdict
 from datetime import date
 from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
 
 import utility
-from new_fantasy_classes import FantasyLeague, Matchup, Member, Player, Team
-from new_fantasy_enums import GameOutcome, GameType
+from fantasy_classes import FantasyLeague, Matchup, Member, Player, Team
+from fantasy_enums import GameOutcome, GameType
 
 config = configparser.ConfigParser()
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -27,8 +26,8 @@ MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
 
 # Placeholders for BYE weeks
 PLACEHOLDER_LEAGUE = FantasyLeague("", "", 99999, 99999)
-PLACEHOLDER_MEMBER = Member(weakref.proxy(PLACEHOLDER_LEAGUE), "", "")
-PLACEHOLDER_TEAM = Team(99999, 99999, "", weakref.proxy(PLACEHOLDER_MEMBER), 99999)
+PLACEHOLDER_MEMBER = Member(PLACEHOLDER_LEAGUE, "", "")
+PLACEHOLDER_TEAM = Team(99999, 99999, "", PLACEHOLDER_MEMBER, 99999)
 
 # Create a new instance of a league from the config values
 fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
@@ -37,7 +36,6 @@ fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
 pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
 if os.path.exists(pickle_filename):
     with open(pickle_filename, "rb") as f:
-        print("LOADING FROM DISK")
         fantasy_league = pickle.load(f)
 
 
@@ -151,7 +149,7 @@ for api_year in api_years:
     for member in api_year.members:
         name = utility.clean_member_name(f'{member.get("firstName")} {member.get("lastName")}')
         member_id = utility.clean_user_id(member.get("id"))
-        member_object = Member(weakref.proxy(fantasy_league), member_id, name)
+        member_object = Member(fantasy_league, member_id, name)
         # If the id matches an existing league member, update the data for that member
         for existing in fantasy_league.members:
             if member_object.same(existing):
@@ -189,7 +187,7 @@ for api_year in api_years:
                 # Add the new team to the member
                 else:
                     team_name = utility.clean_team_name(member.name, api_year.year, team.team_name)
-                    team_object = Team(team.division_id, espn_id, team_name, weakref.proxy(member), api_year.year)
+                    team_object = Team(team.division_id, espn_id, team_name, member, api_year.year)
                     team_object.update_losses(team.losses)
                     team_object.update_ties(team.ties)
                     team_object.update_wins(team.wins)
@@ -289,46 +287,3 @@ for api_year in api_years:
 
 with open(pickle_filename, "wb") as f:
     pickle.dump(fantasy_league, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-from pprint import pprint
-# Number of people in the league
-print(len(fantasy_league.members), "|| should be 14")
-# Maximum completed year for the league
-print(fantasy_league.max_completed_year, "|| should be 2023")
-""""
-# Number of games each member has played
-for member in fantasy_league.members:
-    print(member.name, "-", len(member.matchup_superset()))
-"""
-# My all-time points for
-for member in fantasy_league.members:
-    if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
-        print("REGULAR SEASON POINTS: ", member.regular_season_points())
-        print("PLAYOFF POINTS: ", member.playoff_points())
-        print("PLAYOFF APPEARANCES: ", member.playoff_appearances())
-        print("WIN %: ", member.regular_season_win_percentage())
-        print("CHAMPIONSHIPS: ", member.championship_wins())
-        print("REGULAR SEASON PPG: ", member.regular_season_average_points())
-        print("PLAYOFF PPG: ", member.playoff_average_points())
-
-for member in fantasy_league.members:
-    print(member.name)
-    #if member.name == "Durgan":
-    for team in member.teams:
-        print(team.year)
-        print(vars(team))
-        print(team.member.name)
-
-"""
-# My 2023 team
-for member in fantasy_league.members:
-    if "C487AA1C-6659-4FF7-B681-E33F72523AAD" == member.id:
-        for team in member.teams:
-            if team.year == 2023:
-                for matchup in team.matchups:
-                    print(matchup.week)
-                    for player in matchup.lineup:
-                        pprint(vars(player))
-                    exit(0)
-"""
-

@@ -2,7 +2,7 @@ from __future__ import annotations
 from itertools import chain
 
 import utility
-from new_fantasy_enums import GameType, GameOutcome, PlayerPosition
+from fantasy_enums import GameType, GameOutcome, PlayerPosition
 
 
 class FantasyLeague:
@@ -226,15 +226,15 @@ class Team:
 
     def playoff_points_scored(self):
         """Calculates the playoff points scored for a team"""
-        return sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.PLAYOFF)
+        return round(sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.PLAYOFF), 2)
 
     def regular_season_points_against(self):
         """Calculates the regular season points scored for a team"""
-        return sum(matchup.points_against for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON)
+        return round(sum(matchup.points_against for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON), 2)
 
     def regular_season_points_scored(self):
         """Calculates the regular season points scored for a team"""
-        return sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON)
+        return round(sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON), 2)
 
     def update_losses(self, losses):
         """Set the team's losses"""

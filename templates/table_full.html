@@ -14,8 +14,8 @@
     <tbody>
     {% for record in records %}
     <tr>
-        <td>{{ record.member_name }}</td>
-        <td>{{ record.team_name }}</td>
+        <td>{{ record.member }}</td>
+        <td>{{ record.team }}</td>
         <td>{{ record.year }}</td>
         <td>{{ record.week }}</td>
         <td>{{ "{:,}".format(record.value) }}</td>
