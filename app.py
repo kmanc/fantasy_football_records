@@ -232,24 +232,39 @@ def highest_losses():
                            members=SORTED_MANAGERS)
 
 
-@app.route("/head-to-head/<member>")
-def head_to_head(member):
-    """
-    member = fantasy_league.members.get(member.strip().title())
-    if member is None:
+@app.route("/head-to-head/<member_name>")
+def head_to_head(member_name):
+    member_name = member_name.strip().title()
+    if member_name is None:
         return render_template("index.html",
                                title_prefix=LEAGUE_ABBREVIATION,
                                record_name="Home",
                                welcome_message=f"Welcome to the {LEAGUE_NAME} online record book",
                                members=SORTED_MANAGERS)
-    records = sorted(({"member": opponent, "value": member.calculate_lifetime_win_percent_against(opponent.name)}
-                      for opponent in fantasy_league.members.values() if opponent.name != member.name),
-                     key=lambda x: x.get("value"), reverse=True)
-    """
+    winrates = []
+    for member in fantasy_league.members:
+        if member.name == member_name:
+            matchups = member.matchup_superset()
+            for opponent in fantasy_league.members:
+                if opponent.id == member.id:
+                    continue
+                games_against = [matchup for matchup in matchups if matchup.opponent.member.name == opponent.name]
+                wins = len([game for game in games_against if game.outcome == GameOutcome.WIN])
+                try:
+                    winrate = round(wins * 100 / len(games_against), 2)
+                    winrates.append({
+                        "member": opponent.name,
+                        "value": winrate
+                    })
+                except ZeroDivisionError:
+                    continue
+
+    records = sorted(winrates, key=lambda x: x.get("value"), reverse=True)
+
     return render_template("table_minimal.html",
-                           records=[],
+                           records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
-                           record_name=f"Win percentages for {member}",
+                           record_name=f"Win percentages for {member_name}",
                            percent="%",
                            members=SORTED_MANAGERS)
 
