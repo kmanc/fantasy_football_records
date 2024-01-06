@@ -87,9 +87,10 @@ def championships():
 @app.route("/total_regular_season_points")
 def total_regular_season_points():
     records = [{"member": format_member_for_display(member),
-                "value": member.regular_season_points()}
+                "value": member.regular_season_points(),
+                "average": member.regular_season_average_points(), }
                for member in sorted((member for member in fantasy_league.members), key=lambda member: member.regular_season_points(), reverse=True)]
-    return render_template("table_minimal.html",
+    return render_template("table_with_average.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time regular season points",
@@ -99,10 +100,11 @@ def total_regular_season_points():
 @app.route("/total_playoff_points")
 def total_playoff_points():
     records = [{"member": format_member_for_display(member),
-                "value": member.playoff_points()}
+                "value": member.playoff_points(),
+                "average": member.playoff_average_points(), }
                for member in
                sorted((member for member in fantasy_league.members_with_playoff_appearances()), key=lambda member: member.playoff_points(), reverse=True)]
-    return render_template("table_minimal.html",
+    return render_template("table_with_average.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
                            record_name="All time playoff points",
@@ -127,7 +129,8 @@ def win_percents():
 def playoff_appearances():
     records = [{"member": format_member_for_display(member),
                 "value": member.playoff_appearances(), }
-               for member in sorted(fantasy_league.members_with_championship(), key=lambda member: member.playoff_appearances(), reverse=True)]
+               for member in sorted((member for member in fantasy_league.members if member.playoff_appearances()),
+                                    key=lambda member: member.playoff_appearances(), reverse=True)]
     return render_template("table_minimal.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,

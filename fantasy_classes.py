@@ -158,7 +158,7 @@ class Member:
         return round(self.playoff_points() / len(list(self.playoff_matchups())), 2)
 
     def playoff_matchups(self):
-        """Gets all regular season matchups for a member"""
+        """Gets all playoff matchups for a member"""
         return (matchup for matchup in self.matchup_superset() if matchup.type == GameType.PLAYOFF)
 
     def playoff_points(self):
