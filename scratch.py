@@ -2,7 +2,7 @@ import configparser
 import os
 import pickle
 import requests
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from datetime import date
 from espn_api.football import League
 from espn_api.requests.espn_requests import ESPNInvalidLeague
@@ -41,6 +41,45 @@ Wildcard playoff teams are then determined by:
     Tiebreaker 2 - divisional record
 """
 
+divisions = defaultdict(list)
+divisional_standings = defaultdict(dict)
+flat_standings = defaultdict(dict)
+for team in fantasy_league.teams_in_active_year():
+    divisions[team.division].append(team.espn_id)
+
+print(divisions)
+
+for team in fantasy_league.teams_in_active_year():
+    divisional_wins = 0
+    for matchup in team.matchups:
+        if matchup.outcome == GameOutcome.WIN and matchup.opponent.espn_id in divisions.get(team.division):
+            divisional_wins += 1
+    team_stats = {
+        "wins": team.wins,
+        "divisional_wins": divisional_wins,
+        "points_for": team.regular_season_points_scored()
+    }
+    divisional_standings[team.division][team.name] = team_stats
+    flat_standings[team.name] = team_stats
+
+for division, division_data in divisional_standings.items():
+    divisional_standings[division] = OrderedDict(sorted(division_data.items(),
+                                                        key=lambda item: (
+                                                            item[1].get("wins"),
+                                                            item[1].get("divisional_wins"),
+                                                            item[1].get("points_for")
+                                                        ), reverse=True))
+
+flat_standings = OrderedDict(sorted(flat_standings.items(),
+                                    key=lambda item: (
+                                        item[1].get("points_for"),
+                                        item[1].get("wins"),
+                                        item[1].get("divisional_wins")
+                                    ), reverse=True))
+
+print(divisional_standings)
+print()
+print(flat_standings)
 """
 Once the standings are sorted, divisional winners are seeded by total wins
     Tiebreaker 1 - total points scored
