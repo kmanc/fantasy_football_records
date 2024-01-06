@@ -7,4 +7,5 @@ __pycache__/
 # Files
 config.ini
 *.pickle
+*.json
 .DS_Store

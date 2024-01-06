@@ -7,6 +7,8 @@ from fantasy_enums import GameType, GameOutcome, PlayerPosition
 
 class FantasyLeague:
     active_year: int
+    active_year_playoff_slots: int
+    active_year_regular_season_length: int
     espn_s2: str
     espn_swid: str
     founded_year: int
@@ -14,7 +16,6 @@ class FantasyLeague:
     members: set[Member]
     name: str
     max_completed_year: int
-    playoff_team_size: int
 
     def __init__(self, espn_s2, espn_swid, founded_year, league_id):
         self.active_year = 0
@@ -79,9 +80,13 @@ class FantasyLeague:
         """Set the league's name to the given string"""
         self.name = name
 
-    def update_playoff_team_size(self, size):
+    def update_active_year_playoff_slots(self, size):
         """Set the league's playoff team size to the given integer"""
-        self.playoff_team_size = size
+        self.active_year_playoff_slots = size
+
+    def update_active_year_regular_season_length(self, size):
+        """Set the league's regular season length to the given integer"""
+        self.active_year_regular_season_length = size
 
 
 class Matchup:

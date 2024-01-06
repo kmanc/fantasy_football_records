@@ -28,12 +28,12 @@ else:
     print(f"Could not find pickled league instance at {league_pickle_filename}")
     exit(1)
     
-snapshot_pickle_filename = f"{dir_path}/Playoff Snapshot.pickle"
-if os.path.exists(snapshot_pickle_filename):
-    with open(snapshot_pickle_filename, "r") as f:
+snapshot_json_filename = f"{dir_path}/Playoff Snapshot.json"
+if os.path.exists(snapshot_json_filename):
+    with open(snapshot_json_filename, "r") as f:
         standings_snapshot = json.load(f)
 else:
-    print(f"Could not find the regular season snapshot list at {snapshot_pickle_filename}")
+    print(f"Could not find the regular season snapshot list at {snapshot_json_filename}")
     exit(1)
 
 app = Flask(__name__)

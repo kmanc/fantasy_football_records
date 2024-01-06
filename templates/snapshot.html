@@ -72,7 +72,7 @@
     {% for record in records %}
     <tr>
         <td>{{ record.seed }}</td>
-        <td>{{ record.name ~ records.clinched }}</td>
+        <td>{{ record.name ~ record.clinched }}</td>
         <td>{{ record.wins ~ " - " ~ record.losses }}</td>
         <td>{{ record.points_for }}</td>
         <td>{{ record.points_out }}</td>
