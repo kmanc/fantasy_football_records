@@ -6,6 +6,7 @@
     <tr>
         <th>Member</th>
         <th>Value</th>
+        <th>PPG</th>
     </tr>
     </thead>
     <tbody>
@@ -13,6 +14,7 @@
     <tr>
         <td>{{ record.member }}</td>
         <td>{{ "{:,}".format(record.value) + (percent or "") }}</td>
+        <td>{{ record.average }}</td>
     </tr>
     {% endfor %}
     </tbody>

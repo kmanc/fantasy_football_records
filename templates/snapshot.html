@@ -6,54 +6,54 @@
     <ul class="round round-1">
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top winner">{{ seeds[0] }}</li>
+        <li class="game game-top winner">{{ seeds[0].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
         <li class="game game-bottom ">BYE</li>
 
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top">{{ seeds[4] }}</li>
+        <li class="game game-top">{{ seeds[4].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom ">{{ seeds[3] }}</li>
+        <li class="game game-bottom ">{{ seeds[3].name }}</li>
 
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top ">{{ seeds[5] }}</li>
+        <li class="game game-top ">{{ seeds[5].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom">{{ seeds[2] }}</li>
+        <li class="game game-bottom">{{ seeds[2].name }}</li>
 
         <li class="spacer">&nbsp;</li>
 
         <li class="game game-top">BYE</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom winner">{{ seeds[1] }}</li>
+        <li class="game game-bottom winner">{{ seeds[1].name }}</li>
         <li class="spacer">&nbsp;</li>
     </ul>
     <ul class="round round-2">
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top">{{ seeds[0] }}</li>
+        <li class="game game-top">{{ seeds[12].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom "></li>
+        <li class="game game-bottom ">{{ seeds[14].name }}</li>
 
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top"></li>
+        <li class="game game-top">{{ seeds[15].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom ">{{ seeds[1] }}</li>
+        <li class="game game-bottom ">{{ seeds[13].name }}</li>
         <li class="spacer">&nbsp;</li>
     </ul>
     <ul class="round round-3">
         <li class="spacer">&nbsp;</li>
 
-        <li class="game game-top"></li>
+        <li class="game game-top">{{ seeds[16].name }}</li>
         <li class="game game-spacer">&nbsp;</li>
-        <li class="game game-bottom "></li>
+        <li class="game game-bottom ">{{ seeds[17].name }}</li>
         <li class="spacer">&nbsp;</li>
     </ul>
     <ul class="round round-4">
         <li class="spacer">&nbsp;</li>
-        <li class="game game-top"></li>
+        <li class="game game-top">{{ seeds[18].name }}</li>
         <li class="spacer">&nbsp;</li>
     </ul>
 </main>
@@ -71,11 +71,11 @@
     <tbody>
     {% for record in records %}
     <tr>
-        <td>{{ records[record].seed }}</td>
-        <td>{{ record ~ records[record].clinched }}</td>
-        <td>{{ records[record].total_wins ~ " - " ~ records[record].total_losses }}</td>
-        <td>{{ records[record].total_points_scored }}</td>
-        <td>{{ records[record].points_out }}</td>
+        <td>{{ record.seed }}</td>
+        <td>{{ record.name ~ record.clinched }}</td>
+        <td>{{ record.wins ~ " - " ~ record.losses }}</td>
+        <td>{{ record.points_for }}</td>
+        <td>{{ record.points_out }}</td>
     </tr>
     {% endfor %}
     </tbody>

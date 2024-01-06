@@ -30,6 +30,12 @@
                 <a class="nav-link" href="/lowest_regular_season" style="text-align:center">Lowest season points</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="/best_defense" style="text-align:center">Best defense</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/worst_defense" style="text-align:center">Worst defense</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/highest_week" style="text-align:center">Highest week points</a>
             </li>
             <li class="nav-item">
@@ -47,8 +53,8 @@
                     Head-to-head
                 </a>
                 <div aria-labelledby="navbarDropdownMenuLink" class="dropdown-menu">
-                    {% for owner in owners %}
-                    <a class="dropdown-item" href="/head-to-head/{{ owner }}" style="text-align:center">{{ owner }}</a>
+                    {% for member in members %}
+                    <a class="dropdown-item" href="/head-to-head/{{ member }}" style="text-align:center">{{ member }}</a>
                     {% endfor %}
                 </div>
             </li>
