@@ -1,3 +1,8 @@
-# Note, I use sudo crontab -e, so things will run with root permissions
+# Note, here I used sudo crontab -e, so things will run with root permissions
+# Update the stats weekly on Tuesday mornings (0530 PT --> 1230 UTC)
+0 12 30 * TUE systemctl restart fantasy_football_records
+
+
+# Note, here I used crontab -e, so things will run with user
 # Update the stats weekly on Tuesday mornings (0500 PT --> 1200 UTC)
-0 12 * * TUE systemctl restart fantasy_football_records
+0 12 * * TUE /home/<user>/fantasy_football_records/venv/bin/python3 /home/<user>/fantasy_football_records/update_league.py
