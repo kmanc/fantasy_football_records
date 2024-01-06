@@ -20,12 +20,20 @@ LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
 MEET_THE_MANAGERS_ASSETS = os.path.join("static/meet_the_managers")
 MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, "manager_bios.json")
 
-pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
-if os.path.exists(pickle_filename):
-    with open(pickle_filename, "rb") as f:
+league_pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
+if os.path.exists(league_pickle_filename):
+    with open(league_pickle_filename, "rb") as f:
         fantasy_league = pickle.load(f)
 else:
-    print(f"Could not find pickled league instance at {pickle_filename}")
+    print(f"Could not find pickled league instance at {league_pickle_filename}")
+    exit(1)
+    
+snapshot_pickle_filename = f"{dir_path}/Playoff Snapshot.pickle"
+if os.path.exists(snapshot_pickle_filename):
+    with open(snapshot_pickle_filename, "r") as f:
+        standings_snapshot = json.load(f)
+else:
+    print(f"Could not find the regular season snapshot list at {snapshot_pickle_filename}")
     exit(1)
 
 app = Flask(__name__)
@@ -65,9 +73,9 @@ def index():
 def snapshot():
     return render_template('snapshot.html',
                            title_prefix=LEAGUE_ABBREVIATION,
-                           records=[],
+                           records=standings_snapshot[:len(list(fantasy_league.teams_in_active_year()))],
                            record_name="Current playoff snapshot",
-                           seeds=[],
+                           seeds=standings_snapshot,
                            owners=SORTED_MANAGERS)
 
 

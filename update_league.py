@@ -1,4 +1,6 @@
 import configparser
+import itertools
+import json
 import os
 import pickle
 import requests
@@ -33,9 +35,9 @@ PLACEHOLDER_TEAM = Team(99999, 99999, "", PLACEHOLDER_MEMBER, [], 99999)
 fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
 
 # Override the new instance if one is already saved on disk
-pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
-if os.path.exists(pickle_filename):
-    with open(pickle_filename, "rb") as f:
+league_pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
+if os.path.exists(league_pickle_filename):
+    with open(league_pickle_filename, "rb") as f:
         fantasy_league = pickle.load(f)
 
 
@@ -132,6 +134,7 @@ for year in all_league_years:
         if fantasy_league.active_year < year:
             api_years.append(api_year)
             fantasy_league.update_active_year(year)
+            fantasy_league.update_playoff_team_size(api_year.settings.playoff_team_count)
         # If the year of gathered data has not yet completed, the league needs to be updated
         if api_year.current_week < len(api_year.settings.matchup_periods):
             api_years.append(api_year)
@@ -179,9 +182,9 @@ for api_year in api_years:
                 # If the owner already has a record of that team, update the record
                 for existing_team in member.teams:
                     if existing_team.id == team_id:
-                        existing_team.update_losses(team.losses)
-                        existing_team.update_ties(team.ties)
-                        existing_team.update_wins(team.wins)
+                        existing_team.update_regular_season_losses(team.losses)
+                        existing_team.update_regular_season_ties(team.ties)
+                        existing_team.update_regular_season_wins(team.wins)
                         break
                 # If the loop completed without a break (IE there was no match to an existing member's teams)
                 # Add the new team to the member
@@ -189,9 +192,9 @@ for api_year in api_years:
                     team_name = utility.clean_team_name(member.name, api_year.year, team.team_name)
                     schedule_ids = [opponent.team_id for opponent in team.schedule]
                     team_object = Team(team.division_id, espn_id, team_name, member, schedule_ids, api_year.year)
-                    team_object.update_losses(team.losses)
-                    team_object.update_ties(team.ties)
-                    team_object.update_wins(team.wins)
+                    team_object.update_regular_season_losses(team.losses)
+                    team_object.update_regular_season_ties(team.ties)
+                    team_object.update_regular_season_wins(team.wins)
                     member.add_team(team_object)
 
     # Figure out how far into the season we are
@@ -286,5 +289,190 @@ for api_year in api_years:
                         team.add_matchup(matchup_object)
 
 
-with open(pickle_filename, "wb") as f:
+with open(league_pickle_filename, "wb") as f:
     pickle.dump(fantasy_league, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+# Now do stuff for the playoffs
+# Create a dict {division_id: list[team_id_in_division]}
+divisions = defaultdict(list)
+for team in fantasy_league.teams_in_active_year():
+    divisions[team.division].append(team.espn_id)
+
+
+# Create two dicts containing the data needed to calculate standings
+#     divisional_raw_data - data required to figure out who is winning a division
+#     flat_raw_data - data required to figure out who is winning the points-for wildcard race
+divisional_raw_data = defaultdict(list)
+flat_raw_data = []
+
+for team in fantasy_league.teams_in_active_year():
+    # Calculate how many in-division wins a team has
+    divisional_wins = 0
+    for matchup in team.matchups:
+        if (matchup.type == GameType.REGULAR_SEASON and
+                matchup.outcome == GameOutcome.WIN and
+                matchup.opponent.espn_id in divisions.get(team.division)):
+            divisional_wins += 1
+    team_stats = {
+        "divisional_wins": divisional_wins,
+        "losses": team.regular_season_losses,
+        "name": team.name,
+        "points_for": team.regular_season_points_scored(),
+        "ties": team.regular_season_ties,
+        "wins": team.regular_season_wins,
+    }
+    # Store the raw data in the dict split by division
+    divisional_raw_data[team.division].append(team_stats)
+    # Store it again in the dict not split by division
+    flat_raw_data.append(team_stats)
+
+"""
+WFFL rules state that divisional standings are determined as follows:
+    Overall record
+    Tiebreaker 1 - divisional record
+    Tiebreaker 2 - total points scored
+"""
+
+# Now sort the raw divisional data so that each key contains a sorted list representing the standings for that division
+divisional_standings = {}
+
+for division, division_data in divisional_raw_data.items():
+    divisional_standings[division] = sorted(division_data, key=lambda team_data: (
+        team_data.get("wins"),
+        team_data.get("divisional_wins"),
+        team_data.get("points_for"),
+    ), reverse=True)
+
+"""
+WFFL rules state that wildcard standings are determined as follows:
+    Total points for
+    Tiebreaker 1 - overall record
+    Tiebreaker 2 - divisional record
+"""
+
+# And sort the raw flat data so that it is a list representing the wildcard standings
+wildcard_standings = sorted(flat_raw_data,
+                            key=lambda team_data: (
+                                team_data.get("points_for"),
+                                team_data.get("wins"),
+                                team_data.get("divisional_wins"),
+                            ), reverse=True)
+
+
+# Determine who is leading each division and store them in a dict {division_id: team_data}
+unsorted_division_leaders = {}
+for division, division_data in divisional_standings.items():
+    unsorted_division_leaders[division] = division_data[0]
+
+
+"""
+Once the standings are sorted, divisional winners are seeded by total wins
+    Tiebreaker 1 - total points scored
+"""
+
+
+sorted_division_leaders = sorted(unsorted_division_leaders.values(),
+                                 key=lambda team_data: (
+                                     team_data.get("wins"),
+                                     team_data.get("points_for"),
+                                 ), reverse=True)
+
+"""
+Then wildcard spots are determined by total points for
+    Tiebreaker 1 - total wins
+"""
+
+for leader in sorted_division_leaders:
+    wildcard_standings.remove(leader)
+
+sorted_wildcard_leaders = wildcard_standings[:2]
+
+"""
+The remaining teams are re-sorted by total wins
+    Tiebreaker 1 - total points scored
+"""
+
+sorted_rest_of_league = sorted(wildcard_standings[2:],
+                               key=lambda team_data: (
+                                   team_data.get("wins"),
+                                   team_data.get("points_for"),
+                               ), reverse=True)
+
+# Playoff teams are given their seed
+# Teams on the outside of the playoffs looking in have their total-points-needed for a wildcard spot calculated
+# Pooper bowl teams are given their seed
+full_playoff_picture = []
+seed = 1
+for team_data in itertools.chain(sorted_division_leaders, sorted_wildcard_leaders, sorted_rest_of_league):
+    if seed <= fantasy_league.playoff_team_size:
+        team_data["seed"] = seed
+    else:
+        team_data["points_out"] = round(sorted_wildcard_leaders[-1].get("points_for") - team_data.get("points_for"), 2)
+    if seed >= len(list(fantasy_league.teams_in_active_year())) - 1:
+        team_data["seed"] = "P"
+    full_playoff_picture.append(team_data)
+    seed += 1
+
+# Get the regular season games played by the first place person (should be the same as everyone else)
+regular_season_games_played = full_playoff_picture[0].get("losses") + full_playoff_picture[0].get("ties") + full_playoff_picture[0].get("wins")
+
+# First seed gets a bye, so they win game 1
+full_playoff_picture.append(full_playoff_picture[0])
+# Second seed gets a bye, so they win game 2
+full_playoff_picture.append(full_playoff_picture[1])
+# Who won the 4 vs 5 matchup?
+for team in fantasy_league.teams_in_active_year():
+    if team.name == full_playoff_picture[3].get("name"):
+        for matchup in team.matchups:
+            if matchup.week == regular_season_games_played + 1 and matchup.outcome == GameOutcome.WIN:
+                full_playoff_picture.append(full_playoff_picture[3])
+                break
+            elif matchup.week == regular_season_games_played + 1 and matchup.outcome == GameOutcome.LOSS:
+                full_playoff_picture.append(full_playoff_picture[4])
+                break
+# Who won the 3 vs 6 matchup?
+for team in fantasy_league.teams_in_active_year():
+    if team.name == full_playoff_picture[2].get("name"):
+        for matchup in team.matchups:
+            if matchup.week == regular_season_games_played + 1 and matchup.outcome == GameOutcome.WIN:
+                full_playoff_picture.append(full_playoff_picture[2])
+                break
+            elif matchup.week == regular_season_games_played + 1 and matchup.outcome == GameOutcome.LOSS:
+                full_playoff_picture.append(full_playoff_picture[5])
+                break
+# Who won the round 2 high seed matchup?
+for team in fantasy_league.teams_in_active_year():
+    if team.name == full_playoff_picture[0].get("name"):
+        for matchup in team.matchups:
+            if matchup.week == regular_season_games_played + 2 and matchup.outcome == GameOutcome.WIN:
+                full_playoff_picture.append(full_playoff_picture[0])
+                break
+            elif matchup.week == regular_season_games_played + 2 and matchup.outcome == GameOutcome.LOSS:
+                full_playoff_picture.append(full_playoff_picture[-2])
+                break
+# Who won the round 2 low seed matchup?
+for team in fantasy_league.teams_in_active_year():
+    if team.name == full_playoff_picture[1].get("name"):
+        for matchup in team.matchups:
+            if matchup.week == regular_season_games_played + 2 and matchup.outcome == GameOutcome.WIN:
+                full_playoff_picture.append(full_playoff_picture[1])
+                break
+            elif matchup.week == regular_season_games_played + 2 and matchup.outcome == GameOutcome.LOSS:
+                full_playoff_picture.append(full_playoff_picture[-2])
+                break
+# Who won the championship?
+for team in fantasy_league.teams_in_active_year():
+    if team.name == full_playoff_picture[-2].get("name"):
+        for matchup in team.matchups:
+            if matchup.week == regular_season_games_played + 3 and matchup.outcome == GameOutcome.WIN:
+                full_playoff_picture.append(full_playoff_picture[-2])
+                break
+            elif matchup.week == regular_season_games_played + 3 and matchup.outcome == GameOutcome.LOSS:
+                full_playoff_picture.append(full_playoff_picture[-1])
+                break
+
+
+# Save the regular season snapshot to a JSON file for use by the site
+snapshot_pickle_filename = f"{dir_path}/Playoff Snapshot.pickle"
+with open(snapshot_pickle_filename, "w") as f:
+    json.dump(full_playoff_picture, f)

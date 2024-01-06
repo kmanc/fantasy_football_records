@@ -1,5 +1,5 @@
 from __future__ import annotations
-from itertools import chain
+import itertools
 
 import utility
 from fantasy_enums import GameType, GameOutcome, PlayerPosition
@@ -14,6 +14,7 @@ class FantasyLeague:
     members: set[Member]
     name: str
     max_completed_year: int
+    playoff_team_size: int
 
     def __init__(self, espn_s2, espn_swid, founded_year, league_id):
         self.active_year = 0
@@ -24,6 +25,7 @@ class FantasyLeague:
         self.max_completed_year = 0
         self.members = set()
         self.name = ""
+        self.playoff_team_size = 0
 
     def add_member(self, member):
         """Add a new member to the league"""
@@ -31,7 +33,7 @@ class FantasyLeague:
 
     def player_superset(self):
         """Gets all players from all matchups from all teams from all members in a league"""
-        return set(chain.from_iterable((member.player_superset() for member in self.members)))
+        return set(itertools.chain.from_iterable((member.player_superset() for member in self.members)))
 
     def members_with_championship(self):
         """Returns members who have won a championship"""
@@ -43,7 +45,7 @@ class FantasyLeague:
 
     def matchup_superset(self):
         """Gets all matchups from all teams from all members in a league"""
-        return set(chain.from_iterable((member.matchup_superset() for member in self.members)))
+        return set(itertools.chain.from_iterable((member.matchup_superset() for member in self.members)))
 
     def matchups_by_points_for(self):
         """Sorts all matchups by points scored"""
@@ -51,7 +53,7 @@ class FantasyLeague:
 
     def team_superset(self):
         """Gets all teams from all members in a league"""
-        return set(chain.from_iterable((member.teams for member in self.members)))
+        return set(itertools.chain.from_iterable((member.teams for member in self.members)))
 
     def teams_in_active_year(self):
         """Gets all teams for the active year"""
@@ -76,6 +78,10 @@ class FantasyLeague:
     def update_name(self, name):
         """Set the league's name to the given string"""
         self.name = name
+
+    def update_playoff_team_size(self, size):
+        """Set the league's playoff team size to the given integer"""
+        self.playoff_team_size = size
 
 
 class Matchup:
@@ -143,11 +149,11 @@ class Member:
 
     def matchup_superset(self):
         """Gets all matchups from all teams for a member"""
-        return set(chain.from_iterable((team.matchups for team in self.teams)))
+        return set(itertools.chain.from_iterable((team.matchups for team in self.teams)))
 
     def player_superset(self):
         """Gets all players from all matchups from all teams for a member"""
-        return set(chain.from_iterable((team.player_superset() for team in self.teams)))
+        return set(itertools.chain.from_iterable((team.player_superset() for team in self.teams)))
 
     def playoff_appearances(self):
         """Calculates the playoff appearances for a member"""
@@ -222,13 +228,13 @@ class Team:
     division: int
     id: int
     espn_id: int
-    losses: int
     name: str
     matchups: set[Matchup]
     member: Member
     schedule: list[int]
-    ties: int
-    wins: int
+    regular_season_losses: int
+    regular_season_ties: int
+    regular_season_wins: int
     year: int
 
     def __init__(self, division, espn_id, name, member, schedule, year):
@@ -251,7 +257,7 @@ class Team:
 
     def player_superset(self):
         """Gets all players from all matchups in a team"""
-        return set(chain.from_iterable((matchup.lineup for matchup in self.matchups)))
+        return set(itertools.chain.from_iterable((matchup.lineup for matchup in self.matchups)))
 
     def playoff_points_scored(self):
         """Calculates the playoff points scored for a team"""
@@ -265,17 +271,17 @@ class Team:
         """Calculates the regular season points scored for a team"""
         return round(sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON), 2)
 
-    def update_losses(self, losses):
-        """Set the team's losses"""
-        self.losses = losses
+    def update_regular_season_losses(self, losses):
+        """Set the team's regular season losses"""
+        self.regular_season_losses = losses
 
-    def update_ties(self, ties):
-        """Set the team's ties"""
-        self.ties = ties
+    def update_regular_season_ties(self, ties):
+        """Set the team's regular season ties"""
+        self.regular_season_ties = ties
 
-    def update_wins(self, wins):
-        """Set the team's wins"""
-        self.wins = wins
+    def update_regular_season_wins(self, wins):
+        """Set the team's regular season wins"""
+        self.regular_season_wins = wins
 
     def won_championship(self):
         """Returns a boolean representing whether the team won the championship"""
