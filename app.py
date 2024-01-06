@@ -306,6 +306,7 @@ def meet_the_managers():
     return render_template("meet_the_managers.html",
                            title_prefix=LEAGUE_ABBREVIATION,
                            managers=managers,
+                           record_name=f"Meet the members",
                            bios=bios,
                            meet_the_managers_assets=MEET_THE_MANAGERS_ASSETS,
                            members=SORTED_MANAGERS)

@@ -8,7 +8,6 @@
 {% for manager in managers %}
 <div class="manager-info-card">
     <h4>{{ manager['display_name'] }}</h4>
-    <br>
     <!-- TODO maybe all this logic should just be moved to python? -->
     {% if os.path.exists(os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".jpg")) %}
     {% set src = os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".jpg") %}

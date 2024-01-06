@@ -187,7 +187,10 @@ class Member:
 
     def regular_season_win_percentage(self):
         """Calculates the regular season win percentage for a member"""
-        return round(self.regular_season_wins() * 100 / len(list(self.regular_season_matchups())), 2)
+        try:
+            return round(self.regular_season_wins() * 100 / len(list(self.regular_season_matchups())), 2)
+        except ZeroDivisionError:
+            return 0
 
     def regular_season_wins(self):
         """Calculates the number of regular season wins for a member"""
