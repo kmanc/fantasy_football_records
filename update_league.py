@@ -27,7 +27,7 @@ MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
 # Placeholders for BYE weeks
 PLACEHOLDER_LEAGUE = FantasyLeague("", "", 99999, 99999)
 PLACEHOLDER_MEMBER = Member(PLACEHOLDER_LEAGUE, "", "")
-PLACEHOLDER_TEAM = Team(99999, 99999, "", PLACEHOLDER_MEMBER, 99999)
+PLACEHOLDER_TEAM = Team(99999, 99999, "", PLACEHOLDER_MEMBER, [], 99999)
 
 # Create a new instance of a league from the config values
 fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
@@ -187,7 +187,8 @@ for api_year in api_years:
                 # Add the new team to the member
                 else:
                     team_name = utility.clean_team_name(member.name, api_year.year, team.team_name)
-                    team_object = Team(team.division_id, espn_id, team_name, member, api_year.year)
+                    schedule_ids = [opponent.team_id for opponent in team.schedule]
+                    team_object = Team(team.division_id, espn_id, team_name, member, schedule_ids, api_year.year)
                     team_object.update_losses(team.losses)
                     team_object.update_ties(team.ties)
                     team_object.update_wins(team.wins)

@@ -79,6 +79,7 @@ class FantasyLeague:
 
 
 class Matchup:
+    id: int
     lineup: set[Player]
     opponent: Team
     outcome: GameOutcome
@@ -89,6 +90,7 @@ class Matchup:
     week: int
 
     def __init__(self, opponent, outcome, points_against, points_for, team, game_type, week):
+        self.id = utility.generate_matchup_id(team.id, opponent.id, week)
         self.lineup = set()
         self.opponent = opponent
         self.outcome = outcome
@@ -105,9 +107,7 @@ class Matchup:
     def same(self, other):
         """Basically Matchup.__eq__ but without overriding so Matchup.__hash__ remains untouched"""
         if isinstance(other, Matchup):
-            me = hash(f"{self.team.name} vs {self.opponent.name} week {self.week}")
-            it = hash(f"{other.team.name} vs {other.opponent.name} week {other.week}")
-            return me == it
+            return self.id == other.id
         return False
 
 
@@ -226,17 +226,19 @@ class Team:
     name: str
     matchups: set[Matchup]
     member: Member
+    schedule: list[int]
     ties: int
     wins: int
     year: int
 
-    def __init__(self, division, espn_id, name, member, year):
+    def __init__(self, division, espn_id, name, member, schedule, year):
         self.division = division
         self.id = utility.generate_team_id(espn_id, year)
         self.espn_id = espn_id
         self.name = name
         self.matchups = set()
         self.member = member
+        self.schedule = schedule
         self.year = year
 
     def add_matchup(self, matchup):
