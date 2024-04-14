@@ -483,6 +483,10 @@ for team in fantasy_league.teams_in_active_year():
                 full_playoff_picture.append(full_playoff_picture[-1])
                 break
 
+# If there are less than a full bracket's worth of teams, the season isn't complete yet, so add blanks
+for _ in range(19 - len(full_playoff_picture)):
+    full_playoff_picture.append({"name": ""})
+
 # Now see if anyone has a clinched a playoff berth
 simulated_berth = deepcopy(divisional_standings)
 
