@@ -290,5 +290,8 @@ class Team:
 
     def won_championship(self):
         """Returns a boolean representing whether the team won the championship"""
-        last_game = sorted(self.matchups, key=lambda matchup: matchup.week, reverse=True)[0]
-        return last_game.type == GameType.PLAYOFF and last_game.outcome == GameOutcome.WIN
+        if self.year <= self.member.league.max_completed_year:
+            last_game = sorted(self.matchups, key=lambda matchup: matchup.week, reverse=True)[0]
+            return last_game.type == GameType.PLAYOFF and last_game.outcome == GameOutcome.WIN
+        else:
+            return False
