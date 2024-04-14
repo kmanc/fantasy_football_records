@@ -166,7 +166,7 @@ def lowest_regular_seasons():
                 "team": team.name,
                 "value": team.regular_season_points_scored(),
                 "year": team.year, }
-               for team in fantasy_league.teams_by_regular_season_points_for()[:-10:-1]]
+               for team in fantasy_league.teams_by_regular_season_points_for(exclude_current=True)[:-10:-1]]
     return render_template("table_no_week.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
@@ -180,7 +180,7 @@ def best_defenses():
                 "team": team.name,
                 "value": team.regular_season_points_against(),
                 "year": team.year, }
-               for team in fantasy_league.teams_by_regular_season_points_against()[:-10:-1]]
+               for team in fantasy_league.teams_by_regular_season_points_against(exclude_current=True)[:-10:-1]]
     return render_template("table_no_week.html",
                            records=records,
                            title_prefix=LEAGUE_ABBREVIATION,
