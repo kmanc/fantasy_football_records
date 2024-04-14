@@ -60,12 +60,16 @@ class FantasyLeague:
         """Gets all teams for the active year"""
         return set(team for team in self.team_superset() if team.year == self.active_year)
 
-    def teams_by_regular_season_points_against(self):
+    def teams_by_regular_season_points_against(self, exclude_current=False):
         """Sorts all teams in league by points_against"""
+        if exclude_current:
+            return sorted([team for team in self.team_superset() if team not in self.teams_in_active_year()], key=lambda team: team.regular_season_points_against(), reverse=True)
         return sorted(self.team_superset(), key=lambda team: team.regular_season_points_against(), reverse=True)
 
-    def teams_by_regular_season_points_for(self):
+    def teams_by_regular_season_points_for(self, exclude_current=False):
         """Sorts all teams in league by points_for"""
+        if exclude_current:
+            return sorted([team for team in self.team_superset() if team not in self.teams_in_active_year()], key=lambda team: team.regular_season_points_scored(), reverse=True)
         return sorted(self.team_superset(), key=lambda team: team.regular_season_points_scored(), reverse=True)
 
     def update_active_year(self, year):
