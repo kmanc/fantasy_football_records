@@ -52,7 +52,7 @@ def fetch_player_data(league_id, espn_s2, espn_swid, fetch_year, fetch_week):
     if fetch_year < 2018:
         return output_data
 
-    endpoint = f"https://fantasy.espn.com/apis/v3/games/ffl/seasons/{fetch_year}/segments/0/leagues/{league_id}"
+    endpoint = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{fetch_year}/segments/0/leagues/{league_id}"
     params = {
         "view": "mRoster",
         "scoringPeriodId": fetch_week,
