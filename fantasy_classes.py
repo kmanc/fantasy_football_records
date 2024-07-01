@@ -1,32 +1,22 @@
 from __future__ import annotations
 import itertools
 
-import utility
 from fantasy_enums import GameType, GameOutcome, PlayerPosition
 
 
 class FantasyLeague:
-    active_year: int
-    active_year_playoff_slots: int
-    active_year_regular_season_length: int
-    espn_s2: str
-    espn_swid: str
-    founded_year: int
-    id: int
-    members: set[Member]
-    name: str
-    max_completed_year: int
 
     def __init__(self, espn_s2, espn_swid, founded_year, league_id):
-        self.active_year = 0
-        self.espn_s2 = espn_s2
-        self.espn_swid = espn_swid
-        self.founded_year = founded_year
-        self.id = league_id
-        self.max_completed_year = 0
-        self.members = set()
-        self.name = ""
-        self.playoff_team_size = 0
+        self.active_year: int = 0
+        self.active_year_playoff_slots: int = 0
+        self.active_year_regular_season_length: int = 0
+        self.espn_s2: str = espn_s2
+        self.espn_swid: str = espn_swid
+        self.founded_year: int = founded_year
+        self.id: int = league_id
+        self.max_completed_year: int = 0
+        self.members: set[Member] = set()
+        self.name: str = ""
 
     def add_member(self, member):
         """Add a new member to the league"""
@@ -94,26 +84,16 @@ class FantasyLeague:
 
 
 class Matchup:
-    id: int
-    lineup: set[Player]
-    opponent: Team
-    outcome: GameOutcome
-    points_against: int
-    points_for: int
-    team: Team
-    type: GameType
-    week: int
 
     def __init__(self, opponent, outcome, points_against, points_for, team, game_type, week):
-        self.id = utility.generate_matchup_id(team.id, opponent.id, week)
-        self.lineup = set()
-        self.opponent = opponent
-        self.outcome = outcome
-        self.points_against = points_against
-        self.points_for = points_for
-        self.team = team
-        self.type = game_type
-        self.week = week
+        self.lineup: set[Player] = set()
+        self.opponent: 'Team' = opponent
+        self.outcome: GameOutcome = outcome
+        self.points_against: int = points_against
+        self.points_for: int = points_for
+        self.team: 'Team' = team
+        self.type: GameType = game_type
+        self.week: int = week
 
     def add_player(self, player):
         """Add a player to the matchup's lineup"""
@@ -122,25 +102,19 @@ class Matchup:
     def same(self, other):
         """Basically Matchup.__eq__ but without overriding so Matchup.__hash__ remains untouched"""
         if isinstance(other, Matchup):
-            return self.id == other.id
+            return hash(f"{self.team.espn_id}-{self.opponent.espn_id}-{self.week}") == hash(f"{other.team.espn_id}-{other.opponent.espn_id}-{other.week}")
         return False
 
 
 class Member:
-    id: str
-    joined_year: int
-    league: FantasyLeague
-    left_year: int
-    name: str
-    teams: set[Team]
 
     def __init__(self, league, member_id, name):
-        self.id = member_id
-        self.joined_year = 99999
-        self.league = league
-        self.left_year = 0
-        self.name = name
-        self.teams = set()
+        self.id: str = member_id
+        self.joined_year: int = 99999
+        self.league: FantasyLeague = league
+        self.left_year: int = 0
+        self.name: str = name
+        self.teams: set[Team] = set()
 
     def add_team(self, team):
         """Add a new team to the member"""
@@ -170,7 +144,10 @@ class Member:
 
     def playoff_average_points(self):
         """Calculates the average points scored per playoff game for a member"""
-        return round(self.playoff_points() / len(list(self.playoff_matchups())), 2)
+        try:
+            return round(self.playoff_points() / len(list(self.playoff_matchups())), 2)
+        except ZeroDivisionError:
+            return 0
 
     def playoff_matchups(self):
         """Gets all playoff matchups for a member"""
@@ -182,7 +159,10 @@ class Member:
 
     def playoff_win_percentage(self):
         """Calculates the playoff win percentage for a member"""
-        return round(self.playoff_wins() * 100 / len(list(self.playoff_matchups())), 2)
+        try:
+            return round(self.playoff_wins() * 100 / len(list(self.playoff_matchups())), 2)
+        except ZeroDivisionError:
+            return 0
 
     def playoff_wins(self):
         """Calculates the number of playoff wins for a member"""
@@ -190,7 +170,10 @@ class Member:
 
     def regular_season_average_points(self):
         """Calculates the average points scored per regular season game for a member"""
-        return round(self.regular_season_points() / len(list(self.regular_season_matchups())), 2)
+        try:
+            return round(self.regular_season_points() / len(list(self.regular_season_matchups())), 2)
+        except ZeroDivisionError:
+            return 0
 
     def regular_season_matchups(self):
         """Gets all regular season matchups for a member"""
@@ -221,40 +204,27 @@ class Member:
 
 
 class Player:
-    id: int
-    name: str
-    points: int
-    position: PlayerPosition
 
     def __init__(self, espn_id, name, points, position):
-        self.id = espn_id
-        self.name = name
-        self.points = round(points, ndigits=2)
-        self.position = PlayerPosition(position)
+        self.id: int = espn_id
+        self.name: str = name
+        self.points: int = round(points, ndigits=2)
+        self.position: PlayerPosition = PlayerPosition(position)
 
 
 class Team:
-    division: int
-    id: int
-    espn_id: int
-    name: str
-    matchups: set[Matchup]
-    member: Member
-    schedule: list[int]
-    regular_season_losses: int
-    regular_season_ties: int
-    regular_season_wins: int
-    year: int
 
     def __init__(self, division, espn_id, name, member, schedule, year):
-        self.division = division
-        self.id = utility.generate_team_id(espn_id, year)
-        self.espn_id = espn_id
-        self.name = name
-        self.matchups = set()
-        self.member = member
-        self.schedule = schedule
-        self.year = year
+        self.division: int = division
+        self.espn_id: str = espn_id
+        self.name: str = name
+        self.matchups: set[Matchup] = set()
+        self.member: Member = member
+        self.regular_season_losses: int = 0
+        self.regular_season_ties: int = 0
+        self.regular_season_wins: int = 0
+        self.schedule: list[int] = schedule
+        self.year: int = year
 
     def add_matchup(self, matchup):
         """Adds a matchup to the team"""

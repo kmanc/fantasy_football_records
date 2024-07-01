@@ -22,18 +22,19 @@ S2 = config["ESPN"]["s2"]
 SWID = config["ESPN"]["swid"]
 LEAGUE_ID = int(config["ESPN"]["league_id"])
 FIRST_YEAR = int(config["ESPN"]["league_founded"])
+FULL_BRACKET_SLOTS = 19
 LEAGUE_NAME = config["WEBSITE"]["league_name"].replace('"', '')
 LEAGUE_ABBREVIATION = config["WEBSITE"]["league_abbreviation"].replace('"', '')
 MEET_THE_MANAGERS_ASSETS = os.path.join('static/meet_the_managers')
 MANAGER_BIOS_PATH = os.path.join(MEET_THE_MANAGERS_ASSETS, 'manager_bios.json')
 
 # Placeholders for BYE weeks
-PLACEHOLDER_LEAGUE = FantasyLeague("", "", 99999, 99999)
-PLACEHOLDER_MEMBER = Member(PLACEHOLDER_LEAGUE, "", "")
-PLACEHOLDER_TEAM = Team(99999, 99999, "", PLACEHOLDER_MEMBER, [], 99999)
+PLACEHOLDER_LEAGUE = FantasyLeague(espn_s2="", espn_swid="", founded_year=99999, league_id=99999)
+PLACEHOLDER_MEMBER = Member(member_id="", league=PLACEHOLDER_LEAGUE, name="")
+PLACEHOLDER_TEAM = Team(division=99999, espn_id=99999, name="", member=PLACEHOLDER_MEMBER, schedule=[], year=99999)
 
 # Create a new instance of a league from the config values
-fantasy_league = FantasyLeague(S2, SWID, FIRST_YEAR, LEAGUE_ID)
+fantasy_league = FantasyLeague(espn_s2=S2, espn_swid=SWID, founded_year=FIRST_YEAR, league_id=LEAGUE_ID)
 
 # Override the new instance if one is already saved on disk
 league_pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
@@ -108,10 +109,10 @@ def fetch_player_data(league_id, espn_s2, espn_swid, fetch_year, fetch_week):
     # Use the data we put together to create a player object
     for rostered_player in rostered:
         if rostered_player.get("name"):
-            player_object = Player(rostered_player.get("player_id"),
-                                   rostered_player.get("name"),
-                                   rostered_player.get("points"),
-                                   rostered_player.get("position_id"))
+            player_object = Player(espn_id=rostered_player.get("player_id"),
+                                   name=rostered_player.get("name"),
+                                   points=rostered_player.get("points"),
+                                   position=rostered_player.get("position_id"))
             output_data[rostered_player.get("on_team")].append(player_object)
 
     return output_data
@@ -154,7 +155,7 @@ for api_year in api_years:
     for member in api_year.members:
         name = utility.clean_member_name(f'{member.get("firstName")} {member.get("lastName")}')
         member_id = utility.clean_user_id(member.get("id"))
-        member_object = Member(fantasy_league, member_id, name)
+        member_object = Member(league=fantasy_league, member_id=member_id, name=name)
         # If the id matches an existing league member, update the data for that member
         for existing in fantasy_league.members:
             if member_object.same(existing):
@@ -183,7 +184,7 @@ for api_year in api_years:
                 team_id = utility.generate_team_id(espn_id, api_year.year)
                 # If the owner already has a record of that team, update the record
                 for existing_team in member.teams:
-                    if existing_team.id == team_id:
+                    if utility.generate_team_id(existing_team.espn_id, existing_team.year) == team_id:
                         existing_team.update_regular_season_losses(team.losses)
                         existing_team.update_regular_season_ties(team.ties)
                         existing_team.update_regular_season_wins(team.wins)
@@ -193,7 +194,8 @@ for api_year in api_years:
                 else:
                     team_name = utility.clean_team_name(member.name, api_year.year, team.team_name)
                     schedule_ids = [opponent.team_id for opponent in team.schedule]
-                    team_object = Team(team.division_id, espn_id, team_name, member, schedule_ids, api_year.year)
+                    team_object = Team(division=team.division_id, espn_id=espn_id, name=team_name,
+                                       member=member, schedule=schedule_ids, year=api_year.year)
                     team_object.update_regular_season_losses(team.losses)
                     team_object.update_regular_season_ties(team.ties)
                     team_object.update_regular_season_wins(team.wins)
@@ -237,13 +239,13 @@ for api_year in api_years:
             except AttributeError:
                 away_team_id = None
             for team in this_years_teams:
-                if team.id == home_team_id:
+                if utility.generate_team_id(team.espn_id, team.year) == home_team_id:
                     # If there was no away team, throw in a placeholder
                     if away_team_id is None:
                         opponent = PLACEHOLDER_TEAM
                     # If there was an away team, find it
                     else:
-                        opponent = [opponent for opponent in this_years_teams if opponent.id == away_team_id][0]
+                        opponent = [opponent for opponent in this_years_teams if utility.generate_team_id(opponent.espn_id, opponent.year) == away_team_id][0]
                     # Set the outcome to a win
                     outcome = GameOutcome.WIN
                     # Change it to a loss if the away team scored more points
@@ -253,8 +255,9 @@ for api_year in api_years:
                     elif matchup.home_score == matchup.away_score:
                         outcome = GameOutcome.TIE
                     # Create a matchup object based on the information gathered
-                    matchup_object = Matchup(opponent, outcome, matchup.away_score,
-                                             matchup.home_score, team, matchup_type, week)
+                    matchup_object = Matchup(opponent=opponent, outcome=outcome, points_against=matchup.away_score,
+                                             points_for=matchup.home_score, team=team, game_type=matchup_type,
+                                             week=week)
                     # Add the players for the team into the matchup object IF IT EXISTS
                     # Remember that prior to 2018 this data doesn't exist
                     if player_data:
@@ -263,13 +266,13 @@ for api_year in api_years:
                     # If this matchup is not already in the matchup set for a given team, add it
                     if not any(matchup_object.same(existing) for existing in team.matchups):
                         team.add_matchup(matchup_object)
-                elif team.id == away_team_id:
+                elif utility.generate_team_id(team.espn_id, team.year) == away_team_id:
                     # If there was no away team, throw in a placeholder
                     if home_team_id is None:
                         opponent = PLACEHOLDER_TEAM
                     # If there was a home team, find it
                     else:
-                        opponent = [opponent for opponent in this_years_teams if opponent.id == home_team_id][0]
+                        opponent = [opponent for opponent in this_years_teams if utility.generate_team_id(opponent.espn_id, opponent.year) == home_team_id][0]
                     # Set the outcome to a win
                     outcome = GameOutcome.WIN
                     # Change it to a loss if the home team scored more points
@@ -279,8 +282,9 @@ for api_year in api_years:
                     elif matchup.home_score == matchup.away_score:
                         outcome = GameOutcome.TIE
                     # Create a matchup object based on the information gathered
-                    matchup_object = Matchup(opponent, outcome, matchup.home_score,
-                                             matchup.away_score, team, matchup_type, week)
+                    matchup_object = Matchup(opponent=opponent, outcome=outcome, points_against=matchup.home_score,
+                                             points_for=matchup.away_score, team=team, game_type=matchup_type,
+                                             week=week)
                     # Add the players for the team into the matchup object IF IT EXISTS
                     # Remember that prior to 2018 this data doesn't exist
                     if player_data:
@@ -424,9 +428,9 @@ for team_data in itertools.chain(sorted_division_leaders, sorted_wildcard_leader
     seed += 1
 
 # Get the regular season games played by the first place person (should be the same as everyone else)
-regular_season_games_played = (full_playoff_picture[0].get("losses") +
-                               full_playoff_picture[0].get("ties") +
-                               full_playoff_picture[0].get("wins"))
+regular_season_games_played = (int(full_playoff_picture[0].get("losses")) +
+                               int(full_playoff_picture[0].get("ties")) +
+                               int(full_playoff_picture[0].get("wins")))
 
 # First seed gets a bye, so they win game 1
 full_playoff_picture.append(full_playoff_picture[0])
@@ -484,7 +488,7 @@ for team in fantasy_league.teams_in_active_year():
                 break
 
 # If there are less than a full bracket's worth of teams, the season isn't complete yet, so add blanks
-for _ in range(19 - len(full_playoff_picture)):
+for _ in range(FULL_BRACKET_SLOTS - len(full_playoff_picture)):
     full_playoff_picture.append({"name": ""})
 
 # Now see if anyone has a clinched a playoff berth
