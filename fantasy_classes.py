@@ -95,15 +95,17 @@ class Matchup:
         self.type: GameType = game_type
         self.week: int = week
 
+    def __eq__(self, other):
+        if isinstance(other, Matchup):
+            return self.__hash__() == other.__hash__()
+        return False
+
+    def __hash__(self):
+        return hash(f"{self.team.espn_id}-{self.opponent.espn_id}-{self.week}")
+
     def add_player(self, player):
         """Add a player to the matchup's lineup"""
         self.lineup.add(player)
-
-    def same(self, other):
-        """Basically Matchup.__eq__ but without overriding so Matchup.__hash__ remains untouched"""
-        if isinstance(other, Matchup):
-            return hash(f"{self.team.espn_id}-{self.opponent.espn_id}-{self.week}") == hash(f"{other.team.espn_id}-{other.opponent.espn_id}-{other.week}")
-        return False
 
 
 class Member:
@@ -116,6 +118,14 @@ class Member:
         self.name: str = name
         self.teams: set[Team] = set()
 
+    def __eq__(self, other):
+        if isinstance(other, Member):
+            return self.__hash__() == other.__hash__()
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
     def add_team(self, team):
         """Add a new team to the member"""
         self.teams.add(team)
@@ -123,12 +133,6 @@ class Member:
     def championship_wins(self):
         """Calculates the number of championship wins for a member"""
         return len(list(team for team in self.teams if team.won_championship()))
-
-    def same(self, other):
-        """Basically Member.__eq__ but without overriding so Member.__hash__ remains untouched"""
-        if isinstance(other, Member):
-            return self.id == other.id
-        return False
 
     def matchup_superset(self):
         """Gets all matchups from all teams for a member"""

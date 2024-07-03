@@ -158,7 +158,7 @@ for api_year in api_years:
         member_object = Member(league=fantasy_league, member_id=member_id, name=name)
         # If the id matches an existing league member, update the data for that member
         for existing in fantasy_league.members:
-            if member_object.same(existing):
+            if member_object == existing:
                 # update existing members
                 existing.update_joined_year(api_year.year)
                 existing.update_left_year(api_year.year)
@@ -264,7 +264,7 @@ for api_year in api_years:
                         for player in player_data.get(matchup.home_team.team_id):
                             matchup_object.add_player(player)
                     # If this matchup is not already in the matchup set for a given team, add it
-                    if not any(matchup_object.same(existing) for existing in team.matchups):
+                    if not any(matchup_object == existing for existing in team.matchups):
                         team.add_matchup(matchup_object)
                 elif utility.generate_team_id(team.espn_id, team.year) == away_team_id:
                     # If there was no away team, throw in a placeholder
@@ -291,7 +291,7 @@ for api_year in api_years:
                         for player in player_data.get(matchup.away_team.team_id):
                             matchup_object.add_player(player)
                     # If this matchup is not already in the matchup set for a given team, add it
-                    if not any(matchup_object.same(existing) for existing in team.matchups):
+                    if not any(matchup_object == existing for existing in team.matchups):
                         team.add_matchup(matchup_object)
 
 
