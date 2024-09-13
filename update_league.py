@@ -1,3 +1,4 @@
+import argparse
 import configparser
 import itertools
 import json
@@ -36,9 +37,12 @@ PLACEHOLDER_TEAM = Team(division=99999, espn_id=99999, name="", member=PLACEHOLD
 # Create a new instance of a league from the config values
 fantasy_league = FantasyLeague(espn_s2=S2, espn_swid=SWID, founded_year=FIRST_YEAR, league_id=LEAGUE_ID)
 
-# Override the new instance if one is already saved on disk
+# Override the new instance if the --cache flag is provided at runtime and a saved instance is already on disk
 league_pickle_filename = f"{dir_path}/{LEAGUE_NAME}.pickle"
-if os.path.exists(league_pickle_filename):
+parser = argparse.ArgumentParser(description="Process command-line flags")
+parser.add_argument('--cache', action='store_true', help="Load the cached league instance from disk")
+args = parser.parse_args()
+if args.cache and os.path.exists(league_pickle_filename):
     with open(league_pickle_filename, "rb") as f:
         fantasy_league = pickle.load(f)
 
