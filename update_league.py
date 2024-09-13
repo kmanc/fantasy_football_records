@@ -505,8 +505,8 @@ for sim_division_data in simulated_berth.values():
     for other_player in sim_division_data:
         other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
         other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
-    # Re-insert the division leader at the front of the division
-    sim_division_data.insert(0, leader)
+    # Re-insert the division leader
+    sim_division_data.append(leader)
     # Recalculate the division's standings
     simulated_division = sorted(sim_division_data, key=lambda team_data: (
         team_data.get("wins"),
@@ -542,8 +542,8 @@ for sim_division_data in simulated_bye.values():
     for other_player in sim_division_data:
         other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
         other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
-    # Re-insert the division leader at the front of the division
-    sim_division_data.insert(0, leader)
+    # Re-insert the division leader
+    sim_division_data.append(leader)
     # Recalculate the division's standings in place for use below
     sim_division_data.sort(key=lambda team_data: (
         team_data.get("wins"),
