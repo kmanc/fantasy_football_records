@@ -551,20 +551,22 @@ for sim_division_data in simulated_bye.values():
         team_data.get("points_for"),
     ), reverse=True)
 
-# Determine who is leading each division and store them in a dict {division_id: team_data}
-sim_unsorted_division_leaders = {}
-for sim_division, sim_division_data in simulated_bye.items():
-    sim_unsorted_division_leaders[sim_division] = sim_division_data[0]
+# Get the four simulated division leaders in the bye simulation
+sim_unsorted_division_leaders = [division[0] for division in simulated_bye.values()]
 
-sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders.values(),
+# Sort the division leaders per WaFFL rules
+sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders,
                                      key=lambda team_data: (
                                          team_data.get("wins"),
                                          team_data.get("points_for"),
                                      ), reverse=True)
 
+# Get the two top division leaders in the simulation
 sim_bye_holders = [s.get("name") for s in sim_sorted_division_leaders[:2]]
 
+# Check the current playoff picture's two top teams
 for current_lead in full_playoff_picture[:2]:
+    # If one or both of them is in the simulated bye-holders list, update their name to indicate a bye clinch
     if current_lead.get("name") in sim_bye_holders:
         current_lead["clinched"] = "** (clinched bye)"
 
