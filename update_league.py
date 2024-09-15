@@ -498,23 +498,29 @@ for _ in range(FULL_BRACKET_SLOTS - len(full_playoff_picture)):
 # Now see if anyone has a clinched a playoff berth
 simulated_berth = deepcopy(divisional_standings)
 
-# Loop over the teams
-for sim_division, sim_division_data in simulated_berth.items():
-    # Set the division leaders remaining games to losses
-    leader_name = sim_division_data[0].get("name")
-    sim_division_data[0]["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-    sim_division_data[0]["points_for"] = -1
+# Loop over the divisions in the berth simulation
+for sim_division_data in simulated_berth.values():
+    # Set the division leader's remaining games to losses
+    leader = sim_division_data.pop(0)
+    leader_name = leader.get("name")
+    leader["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+    leader["points_for"] = -1
     # Set the other division teams remaining games to wins
-    for other_player in sim_division_data[1:]:
+    for other_player in sim_division_data:
         other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
         other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
-
+    # Re-insert the division leader
+    sim_division_data.append(leader)
+    # Recalculate the division's standings
     simulated_division = sorted(sim_division_data, key=lambda team_data: (
         team_data.get("wins"),
         team_data.get("divisional_wins"),
         team_data.get("points_for"),
     ), reverse=True)
-    simulated_leader_name = simulated_division[0].get("name")
+    # See if the leader has changed
+    simulated_leader = simulated_division.pop(0)
+    simulated_leader_name = simulated_leader.get("name")
+    # If it hasn't, find them in the playoff picture and update their name to indicate a division clinch
     if simulated_leader_name == leader_name:
         for current_lead in full_playoff_picture[:4]:
             if current_lead.get("name") == simulated_leader_name:
@@ -524,37 +530,47 @@ for sim_division, sim_division_data in simulated_berth.items():
 simulated_bye = deepcopy(divisional_standings)
 bye_holders = [s.get("name") for s in sorted_division_leaders[:2]]
 
-# Loop over the teams
-for sim_division, sim_division_data in simulated_bye.items():
-    # Set the division leaders remaining games to losses
-    if sim_division_data[0].get("name") in bye_holders:
-        sim_division_data[0]["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-        sim_division_data[0]["points_for"] = -1
+# Loop over the divisions in the bye simulation
+for sim_division_data in simulated_bye.values():
+    # If the division leader is already in a top-two spot, set the division leader's remaining games to losses
+    leader = sim_division_data.pop(0)
+    leader_name = leader.get("name")
+    if leader_name in bye_holders:
+        leader["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        leader["points_for"] = -1
+    # If they were not already in a top-two spot, set their remaining games to wins
+    else:
+        leader["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        leader["divisional_wins"] = 4 - other_player.get("divisional_losses")
     # Set the other division teams remaining games to wins
-    for other_player in sim_division_data[1:]:
+    for other_player in sim_division_data:
         other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
         other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
-
-    simulated_division = sorted(sim_division_data, key=lambda team_data: (
+    # Re-insert the division leader
+    sim_division_data.append(leader)
+    # Recalculate the division's standings in place for use below
+    sim_division_data.sort(key=lambda team_data: (
         team_data.get("wins"),
         team_data.get("divisional_wins"),
         team_data.get("points_for"),
     ), reverse=True)
 
-# Determine who is leading each division and store them in a dict {division_id: team_data}
-sim_unsorted_division_leaders = {}
-for sim_division, sim_division_data in simulated_bye.items():
-    sim_unsorted_division_leaders[sim_division] = sim_division_data[0]
+# Get the four simulated division leaders in the bye simulation
+sim_unsorted_division_leaders = [division[0] for division in simulated_bye.values()]
 
-sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders.values(),
+# Sort the division leaders per WaFFL rules
+sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders,
                                      key=lambda team_data: (
                                          team_data.get("wins"),
                                          team_data.get("points_for"),
                                      ), reverse=True)
 
+# Get the two top division leaders in the simulation
 sim_bye_holders = [s.get("name") for s in sim_sorted_division_leaders[:2]]
 
+# Check the current playoff picture's two top teams
 for current_lead in full_playoff_picture[:2]:
+    # If one or both of them is in the simulated bye-holders list, update their name to indicate a bye clinch
     if current_lead.get("name") in sim_bye_holders:
         current_lead["clinched"] = "** (clinched bye)"
 
