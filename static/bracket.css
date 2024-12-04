@@ -1,52 +1,74 @@
-main{
-  display:flex;
-  flex-direction:row;
-}
-.round{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  width:200px;
-  list-style:none;
-  padding:0;
-}
-  .round .spacer{ flex-grow:1; }
-  .round .spacer:first-child,
-  .round .spacer:last-child{ flex-grow:.5; }
-
-  .round .game-spacer{
-    flex-grow:1;
-  }
-
-/*
- *  General Styles
-*/
-body{
-  font-family:sans-serif;
-  font-size:small;
-  padding:10px;
-  line-height:1.4em;
+/* General resets */
+body {
+    margin: 0;
 }
 
-li.game{
-  padding-left:20px;
+/* Main bracket container */
+.bracket {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px; /* space between rounds */
+    padding-bottom: 50px;
 }
 
-  li.game.winner{
-    font-weight:bold;
-  }
-  li.game span{
-    float:right;
-    margin-right:5px;
-  }
+/* Round container */
+.round {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* space between games */
+    justify-content: center;
+}
 
-  li.game-top{ border-bottom:1px solid #aaa; }
+/* For games */
+.game {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    width: 300px;
+}
 
-  li.game-spacer{
-    border-right:1px solid #aaa;
-    min-height:40px;
-  }
+/* Team styling */
+.team {
+    padding: 5px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    transition: background 0.3s;
+    height: 35px;
+}
 
-  li.game-bottom{
-    border-top:1px solid #aaa;
-  }
+.team.winner {
+    background: #d4edda;
+    font-weight: bold;
+}
+
+.team.champ {
+    background: #e8ce4d;
+}
+
+/* Increase gap between games for Round 2 */
+.round-2 {
+    gap: 140px;
+}
+
+/* Add extra margins between rounds */
+.round-2 {
+    margin-top: 60px;
+}
+
+.round-3 {
+    margin-top: 180px;
+}
+
+.round-4 {
+    margin-top: 200px;
+}
