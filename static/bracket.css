@@ -8,9 +8,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 20px; /* space between rounds */
+    gap: 20px; /* Space between rounds */
     padding-bottom: 50px;
     flex-wrap: wrap; /* Allow wrapping for smaller screens */
+    overflow-x: auto; /* Enable horizontal scrolling */
 }
 
 /* Round container */
@@ -20,11 +21,12 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* space between games */
+    gap: 20px; /* Space between games */
     justify-content: center;
+    min-width: 200px; /* Ensure rounds don't shrink too much */
 }
 
-/* For games */
+/* Game styling */
 .game {
     display: flex;
     flex-direction: column;
@@ -35,7 +37,9 @@ body {
     padding: 10px;
     text-align: center;
     position: relative;
-    width: 300px;
+    width: 100%;
+    max-width: 300px; /* Prevent overly wide games */
+    box-sizing: border-box;
 }
 
 /* Team styling */
@@ -44,11 +48,15 @@ body {
     background: #f0f0f0;
     border-radius: 3px;
     transition: background 0.3s;
-    height: 35px;
+    height: auto; /* Adjust height for content */
+    min-height: 30px;
+    font-size: 14px; /* Default font size */
+    word-wrap: break-word; /* Handle long team names */
 }
 
 .team.winner {
     background: #d4edda;
+    font-weight: bold;
 }
 
 .team.champ {
@@ -56,97 +64,57 @@ body {
     font-weight: bold;
 }
 
-/* Increase gap between games for Round 2 */
-.round-2 {
-    gap: 140px;
-}
-
 /* Add extra margins between rounds */
 .round-2 {
-    margin-top: 60px;
+    margin-top: 4.5%;
 }
 
 .round-3 {
-    margin-top: 180px;
+    margin-top: 12.75%;
 }
 
 .round-4 {
-    margin-top: 200px;
+    margin-top: 14%;
 }
+
+/* Increase gap between games for Round 2 */
+.round-2 {
+    gap: 16.5vh;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-    .game {
-        width: 250px; /* Reduce game width */
-        padding: 8px; /* Adjust padding */
-    }
-
-    .bracket {
-        gap: 15px; /* Reduce gap between rounds */
-    }
-
     .round-2 {
-        gap: 100px; /* Reduce gap between games */
-    }
-
-    .round-3 {
-        margin-top: 120px;
-    }
-
-    .round-4 {
-        margin-top: 150px;
+        gap: calc(12vh + 2%); /* Reduce gap dynamically for medium screens */
+        margin-top: 4%; /* Adjust margin */
     }
 }
 
 @media (max-width: 768px) {
-    .game {
-        width: 200px; /* Further reduce game width */
-    }
-
     .bracket {
         flex-direction: column; /* Stack rounds vertically */
         align-items: center;
+        gap: 15px; /* Reduce gap between rounds */
     }
 
     .round {
-        gap: 10px; /* Reduce space between games */
+        gap: 10px; /* Minimize space between games */
+        align-items: center; /* Center games within rounds */
     }
 
-    .round-2 {
-        gap: 60px;
-    }
-
-    .round-3 {
-        margin-top: 80px;
-    }
-
-    .round-4 {
-        margin-top: 100px;
-    }
-}
-
-@media (max-width: 480px) {
     .game {
-        width: 100%; /* Full width on small screens */
-        padding: 5px; /* Adjust padding */
+        width: 90%; /* Use most of the screen width */
+        padding: 8px; /* Adjust padding for small screens */
+        max-width: none; /* Allow full width */
     }
 
     .team {
-        height: auto; /* Allow height to adjust */
-        padding: 3px;
+        font-size: 12px; /* Reduce font size for small screens */
     }
 
-    .bracket {
-        gap: 10px; /* Minimize gaps */
-    }
-
-    .round {
-        gap: 5px; /* Minimize space between games */
-    }
-
-    .round-2,
-    .round-3,
-    .round-4 {
-        margin-top: 40px;
+    .round-2 {
+        gap: calc(8vh + 1%); /* Further reduce gap for small tablets */
+        margin-top: 3%; /* Reduce margin */
     }
 }
