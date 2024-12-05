@@ -1,0 +1,46 @@
+/* General navbar styling */
+.navbar {
+    padding: 0.5rem 1rem; /* Adjust navbar padding */
+}
+
+/* Navbar toggler customization */
+.navbar-light .navbar-toggler {
+    border-color: #ccc; /* Subtle border for the toggler */
+}
+
+/* Center text in nav items */
+.navbar-nav .nav-item .nav-link {
+    text-align: center;
+    display: block; /* Ensure block-level element for proper centering */
+}
+
+/* Active (current) link styling */
+.nav-link.current-path {
+    font-weight: bold; /* Highlight the active page */
+    color: #007bff; /* Active color */
+}
+
+/* Dropdown menu styling */
+.navbar-nav .dropdown-menu {
+    background-color: #f8f9fa; /* Matches Bootstrap's light background */
+    border-radius: 0.25rem; /* Consistent border-radius */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visibility */
+}
+
+.navbar-nav .dropdown-menu .dropdown-item {
+    text-align: center; /* Center dropdown items */
+}
+
+.navbar-nav .dropdown-menu .dropdown-item:hover {
+    background-color: #e9ecef; /* Light hover effect */
+}
+
+/* Dropdown toggle button */
+.navbar-nav .nav-item .dropdown-toggle {
+    font-weight: bold; /* Emphasize the toggle */
+    color: #343a40; /* Example: darker color for better visibility */
+}
+
+.navbar-nav .nav-item .dropdown-toggle:hover {
+    color: #007bff; /* Example: color change on hover */
+}
