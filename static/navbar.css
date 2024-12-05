@@ -37,7 +37,6 @@
 
 /* Dropdown toggle button */
 .navbar-nav .nav-item .dropdown-toggle {
-    font-weight: bold; /* Emphasize the toggle */
     color: #343a40; /* Example: darker color for better visibility */
 }
 
