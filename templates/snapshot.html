@@ -5,36 +5,36 @@
 <div class="bracket">
     <ul class="round round-1">
         <li class="game">
-            <div class="team winner">{{ seeds[0].name }}</div>
+            <div class="team {% if seeds[0].name and seeds[0].name == seeds[12].name %}team winner{% endif %}">{{ seeds[0].name }}</div>
             <div class="team">BYE</div>
         </li>
         <li class="game">
-            <div class="team">{{ seeds[4].name }}</div>
-            <div class="team">{{ seeds[3].name }}</div>
+            <div class="team {% if seeds[4].name and seeds[4].name == seeds[14].name %}team winner{% endif %}">{{ seeds[4].name }}</div>
+            <div class="team {% if seeds[3].name and seeds[3].name == seeds[14].name %}team winner{% endif %}">{{ seeds[3].name }}</div>
         </li>
         <li class="game">
-            <div class="team">{{ seeds[5].name }}</div>
-            <div class="team">{{ seeds[2].name }}</div>
+            <div class="team {% if seeds[5].name and seeds[5].name == seeds[15].name %}team winner{% endif %}">{{ seeds[5].name }}</div>
+            <div class="team {% if seeds[2].name and seeds[2].name == seeds[15].name %}team winner{% endif %}">{{ seeds[2].name }}</div>
         </li>
         <li class="game">
             <div class="team">BYE</div>
-            <div class="team winner">{{ seeds[1].name }}</div>
+            <div class="team {% if seeds[1].name and seeds[1].name == seeds[13].name %}team winner{% endif %}">{{ seeds[1].name }}</div>
         </li>
     </ul>
     <ul class="round round-2">
         <li class="game">
-            <div class="team">{{ seeds[12].name }}</div>
-            <div class="team">{{ seeds[14].name }}</div>
+            <div class="team {% if seeds[12].name and seeds[12].name == seeds[16].name %}team winner{% endif %}">{{ seeds[12].name }}</div>
+            <div class="team {% if seeds[14].name and seeds[14].name == seeds[16].name %}team winner{% endif %}">{{ seeds[14].name }}</div>
         </li>
         <li class="game">
-            <div class="team">{{ seeds[15].name }}</div>
-            <div class="team">{{ seeds[13].name }}</div>
+            <div class="team {% if seeds[15].name and seeds[15].name == seeds[17].name %}team winner{% endif %}">{{ seeds[15].name }}</div>
+            <div class="team {% if seeds[13].name and seeds[13].name == seeds[17].name %}team winner{% endif %}">{{ seeds[13].name }}</div>
         </li>
     </ul>
     <ul class="round round-3">
         <li class="game">
-            <div class="team">{{ seeds[16].name }}</div>
-            <div class="team">{{ seeds[17].name }}</div>
+            <div class="team {% if seeds[16].name and seeds[16].name == seeds[18].name %}team winner{% endif %}">{{ seeds[16].name }}</div>
+            <div class="team {% if seeds[17].name and seeds[17].name == seeds[18].name %}team winner{% endif %}">{{ seeds[17].name }}</div>
         </li>
     </ul>
     <ul class="round round-4">

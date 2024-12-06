@@ -8,9 +8,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 20px; /* space between rounds */
-    padding-bottom: 50px;
+    gap: 1.5%; /* Dynamic gap between rounds */
+    padding-bottom: 5rem;
     flex-wrap: wrap; /* Allow wrapping for smaller screens */
+    overflow-x: auto; /* Enable horizontal scrolling */
 }
 
 /* Round container */
@@ -20,35 +21,41 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* space between games */
+    gap: 1rem; /* Dynamic gap between games */
     justify-content: center;
+    min-width: 18rem; /* Flexible min width */
 }
 
-/* For games */
+/* Game styling */
 .game {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: .5rem;
     background: #fff;
     border: 2px solid #ccc;
     border-radius: 5px;
-    padding: 10px;
+    padding: 1rem;
     text-align: center;
     position: relative;
-    width: 300px;
+    width: 18rem; /* Dynamically scale width */
+    max-width: 100%; /* Prevent overflow */
+    box-sizing: border-box;
 }
 
 /* Team styling */
 .team {
-    padding: 5px;
+    padding: 0.5rem;
     background: #f0f0f0;
     border-radius: 3px;
     transition: background 0.3s;
-    height: 35px;
+    min-height: 2rem; /* Ensure consistent height */
+    font-size: 1rem; /* Adjust font size dynamically */
+    word-wrap: break-word; /* Handle long team names */
 }
 
 .team.winner {
     background: #d4edda;
+    font-weight: bold;
 }
 
 .team.champ {
@@ -56,97 +63,48 @@ body {
     font-weight: bold;
 }
 
-/* Increase gap between games for Round 2 */
+/* Round-specific styling */
 .round-2 {
-    gap: 140px;
-}
-
-/* Add extra margins between rounds */
-.round-2 {
-    margin-top: 60px;
+    gap: 10.5rem; /* Flexible gap scaling */
+    margin-top: 6%;
 }
 
 .round-3 {
-    margin-top: 180px;
+    margin-top: 16.5%;
 }
 
 .round-4 {
-    margin-top: 200px;
+    margin-top: 18%;
 }
 
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-    .game {
-        width: 250px; /* Reduce game width */
-        padding: 8px; /* Adjust padding */
-    }
-
-    .bracket {
-        gap: 15px; /* Reduce gap between rounds */
-    }
-
-    .round-2 {
-        gap: 100px; /* Reduce gap between games */
-    }
-
-    .round-3 {
-        margin-top: 120px;
-    }
-
-    .round-4 {
-        margin-top: 150px;
-    }
-}
-
-@media (max-width: 768px) {
-    .game {
-        width: 200px; /* Further reduce game width */
-    }
-
+@media (max-width: 1280px) {
     .bracket {
         flex-direction: column; /* Stack rounds vertically */
-        align-items: center;
+        align-items: center; /* Center all rounds */
+        gap: 1rem; /* Consistent gap between rounds */
     }
 
     .round {
-        gap: 10px; /* Reduce space between games */
+        display: flex;
+        flex-direction: row; /* Arrange games horizontally */
+        justify-content: center; /* Center games horizontally */
+        align-items: center; /* Center games vertically */
+        gap: 1rem; /* Space between games */
+        width: 100%; /* Allow rounds to stretch across */
+        min-height: 100px; /* Ensure enough height for vertical centering */
+        margin-top: 0%;
     }
 
-    .round-2 {
-        gap: 60px;
-    }
-
-    .round-3 {
-        margin-top: 80px;
-    }
-
-    .round-4 {
-        margin-top: 100px;
-    }
-}
-
-@media (max-width: 480px) {
     .game {
-        width: 100%; /* Full width on small screens */
-        padding: 5px; /* Adjust padding */
+        flex-shrink: 0; /* Prevent games from shrinking */
+        padding: 0.75rem;
+        width: 20%; /* Flexible width for games */
+        min-height: 12rem;
     }
 
     .team {
-        height: auto; /* Allow height to adjust */
-        padding: 3px;
-    }
-
-    .bracket {
-        gap: 10px; /* Minimize gaps */
-    }
-
-    .round {
-        gap: 5px; /* Minimize space between games */
-    }
-
-    .round-2,
-    .round-3,
-    .round-4 {
-        margin-top: 40px;
+        font-size: 0.9rem; /* Adjust font size for medium screens */
+        word-wrap: break-word; /* Prevent text overflow */
     }
 }
