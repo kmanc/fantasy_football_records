@@ -8,8 +8,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 20px; /* Space between rounds */
-    padding-bottom: 50px;
+    gap: 1.5%; /* Dynamic gap between rounds */
+    padding-bottom: 5rem;
     flex-wrap: wrap; /* Allow wrapping for smaller screens */
     overflow-x: auto; /* Enable horizontal scrolling */
 }
@@ -21,36 +21,35 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Space between games */
+    gap: 1rem; /* Dynamic gap between games */
     justify-content: center;
-    min-width: 200px; /* Ensure rounds don't shrink too much */
+    min-width: 18rem; /* Flexible min width */
 }
 
 /* Game styling */
 .game {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: .5rem;
     background: #fff;
     border: 2px solid #ccc;
     border-radius: 5px;
-    padding: 10px;
+    padding: 1rem;
     text-align: center;
     position: relative;
-    width: 100%;
-    max-width: 300px; /* Prevent overly wide games */
+    width: 18rem; /* Dynamically scale width */
+    max-width: 100%; /* Prevent overflow */
     box-sizing: border-box;
 }
 
 /* Team styling */
 .team {
-    padding: 5px;
+    padding: 0.5rem;
     background: #f0f0f0;
     border-radius: 3px;
     transition: background 0.3s;
-    height: auto; /* Adjust height for content */
-    min-height: 30px;
-    font-size: 14px; /* Default font size */
+    min-height: 2rem; /* Ensure consistent height */
+    font-size: 1rem; /* Adjust font size dynamically */
     word-wrap: break-word; /* Handle long team names */
 }
 
@@ -64,57 +63,48 @@ body {
     font-weight: bold;
 }
 
-/* Add extra margins between rounds */
+/* Round-specific styling */
 .round-2 {
-    margin-top: 4.5%;
+    gap: 10.5rem; /* Flexible gap scaling */
+    margin-top: 6%;
 }
 
 .round-3 {
-    margin-top: 12.75%;
+    margin-top: 16.5%;
 }
 
 .round-4 {
-    margin-top: 14%;
+    margin-top: 18%;
 }
-
-/* Increase gap between games for Round 2 */
-.round-2 {
-    gap: 16.5vh;
-}
-
 
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-    .round-2 {
-        gap: calc(12vh + 2%); /* Reduce gap dynamically for medium screens */
-        margin-top: 4%; /* Adjust margin */
-    }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
     .bracket {
         flex-direction: column; /* Stack rounds vertically */
-        align-items: center;
-        gap: 15px; /* Reduce gap between rounds */
+        align-items: center; /* Center all rounds */
+        gap: 1rem; /* Consistent gap between rounds */
     }
 
     .round {
-        gap: 10px; /* Minimize space between games */
-        align-items: center; /* Center games within rounds */
+        display: flex;
+        flex-direction: row; /* Arrange games horizontally */
+        justify-content: center; /* Center games horizontally */
+        align-items: center; /* Center games vertically */
+        gap: 1rem; /* Space between games */
+        width: 100%; /* Allow rounds to stretch across */
+        min-height: 100px; /* Ensure enough height for vertical centering */
+        margin-top: 0%;
     }
 
     .game {
-        width: 90%; /* Use most of the screen width */
-        padding: 8px; /* Adjust padding for small screens */
-        max-width: none; /* Allow full width */
+        flex-shrink: 0; /* Prevent games from shrinking */
+        padding: 0.75rem;
+        width: 20%; /* Flexible width for games */
+        min-height: 12rem;
     }
 
     .team {
-        font-size: 12px; /* Reduce font size for small screens */
-    }
-
-    .round-2 {
-        gap: calc(8vh + 1%); /* Further reduce gap for small tablets */
-        margin-top: 3%; /* Reduce margin */
+        font-size: 0.9rem; /* Adjust font size for medium screens */
+        word-wrap: break-word; /* Prevent text overflow */
     }
 }
