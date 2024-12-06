@@ -78,7 +78,7 @@ body {
 }
 
 /* Responsive adjustments */
-@media (max-width: 1280px) {
+@media (max-width: 1399px) {
     .bracket {
         flex-direction: column; /* Stack rounds vertically */
         align-items: center; /* Center all rounds */
