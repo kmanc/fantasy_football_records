@@ -41,18 +41,22 @@ Bootstrap(app)
 SORTED_MANAGERS = sorted(member.name for member in fantasy_league.members)
 
 
-def format_member_for_display(member_obj):
+def format_member_for_display(member_obj, affected_by_tenure=False):
     # Member was a founding member of the league and is still active
     if member_obj.joined_year == fantasy_league.founded_year and member_obj.left_year == fantasy_league.active_year:
         return member_obj.name
-    # Member was a founding member of the league but is no longer active
-    if member_obj.joined_year == fantasy_league.founded_year and member_obj.left_year < fantasy_league.active_year:
-        return f"{member_obj.name}\N{ASTERISK} (Left {member_obj.left_year})"
-    # Member joined the league after it was founded, but is still active
-    elif member_obj.left_year == fantasy_league.active_year:
-        return f"{member_obj.name}\N{ASTERISK} (Joined {member_obj.joined_year})"
-    # Member joined the league after it was founded, and is no longer active
-    return f"{member_obj.name}\N{ASTERISK} ({member_obj.joined_year} - {member_obj.left_year})"
+    # If there is a reason to note that a member joined late or left early, do so
+    if affected_by_tenure:
+        # Member was a founding member of the league but is no longer active
+        if member_obj.joined_year == fantasy_league.founded_year and member_obj.left_year < fantasy_league.active_year:
+            return f"{member_obj.name}\N{ASTERISK} (Left {member_obj.left_year})"
+        # Member joined the league after it was founded, but is still active
+        elif member_obj.left_year == fantasy_league.active_year:
+            return f"{member_obj.name}\N{ASTERISK} (Joined {member_obj.joined_year})"
+        # Member joined the league after it was founded, and is no longer active
+        return f"{member_obj.name}\N{ASTERISK} ({member_obj.joined_year} - {member_obj.left_year})"
+    # Otherwise just return their name
+    return member_obj.name
 
 
 @app.context_processor
@@ -81,7 +85,7 @@ def snapshot():
 
 @app.route("/championships")
 def championships():
-    records = [{"member": format_member_for_display(member),
+    records = [{"member": format_member_for_display(member, affected_by_tenure=True),
                 "value": member.championship_wins(), }
                for member in
                sorted(fantasy_league.members_with_championship(), key=lambda member: member.championship_wins(), reverse=True)]
@@ -94,7 +98,7 @@ def championships():
 
 @app.route("/total_regular_season_points")
 def total_regular_season_points():
-    records = [{"member": format_member_for_display(member),
+    records = [{"member": format_member_for_display(member, affected_by_tenure=True),
                 "value": member.regular_season_points(),
                 "average": member.regular_season_average_points(), }
                for member in sorted((member for member in fantasy_league.members), key=lambda member: member.regular_season_points(), reverse=True)]
@@ -107,7 +111,7 @@ def total_regular_season_points():
 
 @app.route("/total_playoff_points")
 def total_playoff_points():
-    records = [{"member": format_member_for_display(member),
+    records = [{"member": format_member_for_display(member, affected_by_tenure=True),
                 "value": member.playoff_points(),
                 "average": member.playoff_average_points(), }
                for member in
@@ -135,7 +139,7 @@ def win_percents():
 
 @app.route("/playoff_appearances")
 def playoff_appearances():
-    records = [{"member": format_member_for_display(member),
+    records = [{"member": format_member_for_display(member, affected_by_tenure=True),
                 "value": member.playoff_appearances(), }
                for member in sorted((member for member in fantasy_league.members if member.playoff_appearances()),
                                     key=lambda member: member.playoff_appearances(), reverse=True)]
@@ -287,7 +291,7 @@ def head_to_head(member_name):
                 try:
                     winrate = round(wins * 100 / len(games_against), 2)
                     winrates.append({
-                        "member": format_member_for_display(opponent),
+                        "member": format_member_for_display(opponent, affected_by_tenure=True),
                         "value": winrate
                     })
                 except ZeroDivisionError:
