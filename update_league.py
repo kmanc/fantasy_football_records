@@ -568,10 +568,22 @@ sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders,
 # Get the two top division leaders in the simulation
 sim_bye_holders = [s.get("name") for s in sim_sorted_division_leaders[:2]]
 
+# Figure out what year it is one last time
+api_year = get_year_from_api(date.today().year)
+try:
+    api_year = get_year_from_api(date.today().year + 1)
+except ESPNInvalidLeague:
+    pass
+# So that we can figure out what week it is
+current_week = api_year.current_week
+
 # Check the current playoff picture's two top teams
 for current_lead in full_playoff_picture[:2]:
+    # If it is beyond the end of the regular season, they have clinched a bye
+    if current_week > fantasy_league.active_year_regular_season_length:
+        current_lead["clinched"] = "** (clinched bye)"
     # If one or both of them is in the simulated bye-holders list, update their name to indicate a bye clinch
-    if current_lead.get("name") in sim_bye_holders:
+    elif current_lead.get("name") in sim_bye_holders:
         current_lead["clinched"] = "** (clinched bye)"
 
 # Save the regular season snapshot to a JSON file for use by the site
