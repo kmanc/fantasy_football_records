@@ -80,7 +80,7 @@ def snapshot():
                            records=standings_snapshot[:len(list(fantasy_league.teams_in_active_year()))],
                            record_name="Current playoff snapshot",
                            seeds=standings_snapshot,
-                           owners=SORTED_MANAGERS)
+                           members=SORTED_MANAGERS)
 
 
 @app.route("/championships")
