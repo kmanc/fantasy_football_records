@@ -397,19 +397,19 @@ for team in fantasy_league.teams_in_active_year():
 for _ in range(FULL_BRACKET_SLOTS - len(full_playoff_picture)):
     full_playoff_picture.append({"name": ""})
 
+simulated_berth = deepcopy(standings)
+
 # See if any team has clinched a playoff berth
-for team in standings[:6]:
-    simulated_berth = deepcopy(standings)
+for team in simulated_berth:
     team_name = team.get("name")
     # Set the leading teams remaining games to losses and points for to -1 for tiebreakers
     team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
     team["points_for"] = -1
 
     # Set the other teams remaining games to wins
-    for other_team in standings:
-        if other_team.get("name") == team_name:
-            break
-        other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+    for other_team in simulated_berth:
+        if other_team.get("name") != team_name:
+            other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
 
     # Recalculate the standings
     simulated_berth_redone = sorted(simulated_berth, key=lambda team_data: (
@@ -425,19 +425,21 @@ for team in standings[:6]:
         if team_name == current_playoff.get("name") and current_playoff.get("name") in simulated_playoff_names:
             current_playoff["clinched"] = "* (clinched playoffs)"
 
+    # Reset the sim
+    simulated_berth = deepcopy(standings)
+
 # Now see if anyone has a clinched a bye
 simulated_bye = deepcopy(standings)
 
 # See if any team has clinched a playoff berth
-for team in simulated_bye[:2]:
+for team in simulated_bye:
     team_name = team.get("name")
     team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
     team["points_for"] = -1
     # Set the other teams remaining games to wins
-    for other_team in simulated_bye[2:]:
-        if other_team.get("name") == team_name:
-            break
-        other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+    for other_team in simulated_bye:
+        if other_team.get("name") != team_name:
+            other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
 
     # Recalculate the standings for use below
     simulated_bye_redone = sorted(simulated_bye, key=lambda team_data: (
@@ -462,6 +464,9 @@ for team in simulated_bye[:2]:
     for current_bye in full_playoff_picture[:2]:
         if team_name == current_bye.get("name") and current_bye.get("name") in sim_bye_names:
             current_bye["clinched"] = "** (clinched bye)"
+
+    # Reset the sim
+    simulated_bye = deepcopy(standings)
 
 # Save the regular season snapshot to a JSON file for use by the site
 snapshot_json_filename = f"{dir_path}/Playoff Snapshot.json"
