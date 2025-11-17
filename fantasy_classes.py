@@ -40,7 +40,9 @@ class FantasyLeague:
 
     def matchups_by_points_for(self):
         """Sorts all matchups by points scored"""
-        return sorted(self.matchup_superset(), key=lambda matchup: matchup.points_for, reverse=True)
+        # Remove zero scores
+        clean = (matchup for matchup in self.matchup_superset() if matchup.points_for != 0)
+        return sorted(clean, key=lambda matchup: matchup.points_for, reverse=True)
 
     def team_superset(self):
         """Gets all teams from all members in a league"""
