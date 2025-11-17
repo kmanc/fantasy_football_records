@@ -303,33 +303,131 @@ with open(league_pickle_filename, "wb") as f:
     pickle.dump(fantasy_league, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-# Create dict containing the data needed to calculate standings
-#     flat_raw_data - data required to figure out who is winning the single-division standings
+# Now do stuff for the playoffs
+# Create a dict {division_id: list[team_id_in_division]}
+divisions = defaultdict(list)
+for team in fantasy_league.teams_in_active_year():
+    divisions[team.division].append(team.espn_id)
+
+
+# Create two dicts containing the data needed to calculate standings
+#     divisional_raw_data - data required to figure out who is winning a division
+#     flat_raw_data - data required to figure out who is winning the points-for wildcard race
+divisional_raw_data = defaultdict(list)
 flat_raw_data = []
 
 for team in fantasy_league.teams_in_active_year():
+    # Calculate how many in-division wins a team has
+    divisional_wins = 0
+    divisional_losses = 0
+    for matchup in team.matchups:
+        if (matchup.type == GameType.REGULAR_SEASON and
+                matchup.outcome == GameOutcome.WIN and
+                matchup.opponent.espn_id in divisions.get(team.division)):
+            divisional_wins += 1
+        elif (matchup.type == GameType.REGULAR_SEASON and
+              matchup.outcome == GameOutcome.LOSS and
+              matchup.opponent.espn_id in divisions.get(team.division)):
+            divisional_losses += 1
+
     team_stats = {
+        "divisional_losses": divisional_losses,
+        "divisional_wins": divisional_wins,
         "losses": team.regular_season_losses,
         "name": team.name,
         "points_for": team.regular_season_points_scored(),
         "ties": team.regular_season_ties,
         "wins": team.regular_season_wins,
     }
+    # Store the raw data in the dict split by division
+    divisional_raw_data[team.division].append(team_stats)
+    # Store it again in the dict not split by division
     flat_raw_data.append(team_stats)
 
-# And sort the raw flat data so that it is a list representing the standings
-standings = sorted(flat_raw_data,
-                   key=lambda team_data: (
-                       team_data.get("wins"),
-                       team_data.get("points_for"),
-                   ), reverse=True)
+"""
+WFFL rules state that divisional standings are determined as follows:
+    Overall record
+    Tiebreaker 1 - divisional record
+    Tiebreaker 2 - total points scored
+"""
 
-# Teams are given their seed
+# Now sort the raw divisional data so that each key contains a sorted list representing the standings for that division
+divisional_standings = {}
+
+for division, division_data in divisional_raw_data.items():
+    divisional_standings[division] = sorted(division_data, key=lambda team_data: (
+        team_data.get("wins"),
+        team_data.get("divisional_wins"),
+        team_data.get("points_for"),
+    ), reverse=True)
+
+"""
+WFFL rules state that wildcard standings are determined as follows:
+    Total points for
+    Tiebreaker 1 - overall record
+    Tiebreaker 2 - divisional record
+"""
+
+# And sort the raw flat data so that it is a list representing the wildcard standings
+wildcard_standings = sorted(flat_raw_data,
+                            key=lambda team_data: (
+                                team_data.get("points_for"),
+                                team_data.get("wins"),
+                                team_data.get("divisional_wins"),
+                            ), reverse=True)
+
+
+# Determine who is leading each division and store them in a dict {division_id: team_data}
+unsorted_division_leaders = {}
+for division, division_data in divisional_standings.items():
+    unsorted_division_leaders[division] = division_data[0]
+
+
+"""
+Once the standings are sorted, divisional winners are seeded by total wins
+    Tiebreaker 1 - total points scored
+"""
+
+
+sorted_division_leaders = sorted(unsorted_division_leaders.values(),
+                                 key=lambda team_data: (
+                                     team_data.get("wins"),
+                                     team_data.get("points_for"),
+                                 ), reverse=True)
+
+"""
+Then wildcard spots are determined by total points for
+    Tiebreaker 1 - total wins
+"""
+
+for leader in sorted_division_leaders:
+    wildcard_standings.remove(leader)
+
+sorted_wildcard_leaders = wildcard_standings[:2]
+
+"""
+The remaining teams are re-sorted by total wins
+    Tiebreaker 1 - total points scored
+"""
+
+sorted_rest_of_league = sorted(wildcard_standings[2:],
+                               key=lambda team_data: (
+                                   team_data.get("wins"),
+                                   team_data.get("points_for"),
+                               ), reverse=True)
+
+# Playoff teams are given their seed
+# Teams on the outside of the playoffs looking in have their total-points-needed for a wildcard spot calculated
+# Pooper bowl teams are given their seed
 full_playoff_picture = []
 seed = 1
-for team_data in standings:
+for team_data in itertools.chain(sorted_division_leaders, sorted_wildcard_leaders, sorted_rest_of_league):
     if seed <= fantasy_league.active_year_playoff_slots:
         team_data["seed"] = seed
+    else:
+        team_data["points_out"] = round(sorted_wildcard_leaders[-1].get("points_for") - team_data.get("points_for"), 2)
+    if seed >= len(list(fantasy_league.teams_in_active_year())) - 1:
+        team_data["seed"] = "P"
     full_playoff_picture.append(team_data)
     seed += 1
 
@@ -397,76 +495,96 @@ for team in fantasy_league.teams_in_active_year():
 for _ in range(FULL_BRACKET_SLOTS - len(full_playoff_picture)):
     full_playoff_picture.append({"name": ""})
 
-simulated_berth = deepcopy(standings)
+# Now see if anyone has a clinched a playoff berth
+simulated_berth = deepcopy(divisional_standings)
 
-# See if any team has clinched a playoff berth
-for team in simulated_berth:
-    team_name = team.get("name")
-    # Set the leading teams remaining games to losses and points for to -1 for tiebreakers
-    team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-    team["points_for"] = -1
-
-    # Set the other teams remaining games to wins
-    for other_team in simulated_berth:
-        if other_team.get("name") != team_name:
-            other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-
-    # Recalculate the standings
-    simulated_berth_redone = sorted(simulated_berth, key=lambda team_data: (
+# Loop over the divisions in the berth simulation
+for sim_division_data in simulated_berth.values():
+    # Set the division leader's remaining games to losses
+    leader = sim_division_data.pop(0)
+    leader_name = leader.get("name")
+    leader["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+    leader["points_for"] = -1
+    # Set the other division teams remaining games to wins
+    for other_player in sim_division_data:
+        other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
+    # Re-insert the division leader
+    sim_division_data.append(leader)
+    # Recalculate the division's standings
+    simulated_division = sorted(sim_division_data, key=lambda team_data: (
         team_data.get("wins"),
+        team_data.get("divisional_wins"),
         team_data.get("points_for"),
     ), reverse=True)
-
-    simulated_playoff_names = [s.get("name") for s in simulated_berth_redone[:6]]
-
-    # See if the leaders have changed
+    # See if the leader has changed
+    simulated_leader = simulated_division.pop(0)
+    simulated_leader_name = simulated_leader.get("name")
     # If it hasn't, find them in the playoff picture and update their name to indicate a division clinch
-    for current_playoff in full_playoff_picture[:6]:
-        if team_name == current_playoff.get("name") and current_playoff.get("name") in simulated_playoff_names:
-            current_playoff["clinched"] = "* (clinched playoffs)"
-
-    # Reset the sim
-    simulated_berth = deepcopy(standings)
+    if simulated_leader_name == leader_name:
+        for current_lead in full_playoff_picture[:4]:
+            if current_lead.get("name") == simulated_leader_name:
+                current_lead["clinched"] = "* (clinched division)"
 
 # Now see if anyone has a clinched a bye
-simulated_bye = deepcopy(standings)
+simulated_bye = deepcopy(divisional_standings)
+bye_holders = [s.get("name") for s in sorted_division_leaders[:2]]
 
-# See if any team has clinched a playoff berth
-for team in simulated_bye:
-    team_name = team.get("name")
-    team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-    team["points_for"] = -1
-    # Set the other teams remaining games to wins
-    for other_team in simulated_bye:
-        if other_team.get("name") != team_name:
-            other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-
-    # Recalculate the standings for use below
-    simulated_bye_redone = sorted(simulated_bye, key=lambda team_data: (
+# Loop over the divisions in the bye simulation
+for sim_division_data in simulated_bye.values():
+    # If the division leader is already in a top-two spot, set the division leader's remaining games to losses
+    leader = sim_division_data.pop(0)
+    leader_name = leader.get("name")
+    if leader_name in bye_holders:
+        leader["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        leader["points_for"] = -1
+    # If they were not already in a top-two spot, set their remaining games to wins
+    else:
+        leader["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        leader["divisional_wins"] = 4 - other_player.get("divisional_losses")
+    # Set the other division teams remaining games to wins
+    for other_player in sim_division_data:
+        other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
+        other_player["divisional_wins"] = 4 - other_player.get("divisional_losses")
+    # Re-insert the division leader
+    sim_division_data.append(leader)
+    # Recalculate the division's standings in place for use below
+    sim_division_data.sort(key=lambda team_data: (
         team_data.get("wins"),
+        team_data.get("divisional_wins"),
         team_data.get("points_for"),
     ), reverse=True)
 
-    # Get the two top division leaders in the simulation
-    sim_bye_names = [s.get("name") for s in simulated_bye_redone[:2]]
+# Get the four simulated division leaders in the bye simulation
+sim_unsorted_division_leaders = [division[0] for division in simulated_bye.values()]
 
-    # Figure out what year it is one last time
-    api_year = get_year_from_api(date.today().year)
-    try:
-        api_year = get_year_from_api(date.today().year + 1)
-    except ESPNInvalidLeague:
-        pass
-    # So that we can figure out what week it is
-    current_week = api_year.current_week
+# Sort the division leaders per WaFFL rules
+sim_sorted_division_leaders = sorted(sim_unsorted_division_leaders,
+                                     key=lambda team_data: (
+                                         team_data.get("wins"),
+                                         team_data.get("points_for"),
+                                     ), reverse=True)
 
-    # See if the leaders have changed
-    # If it hasn't, find them in the playoff picture and update their name to indicate a division clinch
-    for current_bye in full_playoff_picture[:2]:
-        if team_name == current_bye.get("name") and current_bye.get("name") in sim_bye_names:
-            current_bye["clinched"] = "** (clinched bye)"
+# Get the two top division leaders in the simulation
+sim_bye_holders = [s.get("name") for s in sim_sorted_division_leaders[:2]]
 
-    # Reset the sim
-    simulated_bye = deepcopy(standings)
+# Figure out what year it is one last time
+api_year = get_year_from_api(date.today().year)
+try:
+    api_year = get_year_from_api(date.today().year + 1)
+except ESPNInvalidLeague:
+    pass
+# So that we can figure out what week it is
+current_week = api_year.current_week
+
+# Check the current playoff picture's two top teams
+for current_lead in full_playoff_picture[:2]:
+    # If it is beyond the end of the regular season, they have clinched a bye
+    if current_week > fantasy_league.active_year_regular_season_length:
+        current_lead["clinched"] = "** (clinched bye)"
+    # If one or both of them is in the simulated bye-holders list, update their name to indicate a bye clinch
+    elif current_lead.get("name") in sim_bye_holders:
+        current_lead["clinched"] = "** (clinched bye)"
 
 # Save the regular season snapshot to a JSON file for use by the site
 snapshot_json_filename = f"{dir_path}/Playoff Snapshot.json"
