@@ -402,19 +402,25 @@ simulated_berth = deepcopy(standings)
 # See if any team has clinched a playoff berth
 for team in simulated_berth:
     team_name = team.get("name")
-    # Set the leading teams remaining games to losses and points for to -1 for tiebreakers
+    # Save the old values
+    old_losses = team.get("losses")
+    old_points_for = team.get("points_for")
+    # Set the team's remaining games to losses and points for to -1 for tiebreakers
     team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
     team["points_for"] = -1
 
+    other_old_wins = {}
     # Set the other teams remaining games to wins
     for other_team in simulated_berth:
-        if other_team.get("name") != team_name:
+        other_name = other_team.get("name")
+        if other_name != team_name:
+            other_old_wins[other_name] = other_team.get("wins")
             other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
 
     # Recalculate the standings
-    simulated_berth_redone = sorted(simulated_berth, key=lambda team_data: (
-        team_data.get("wins"),
-        team_data.get("points_for"),
+    simulated_berth_redone = sorted(simulated_berth, key=lambda t: (
+        t.get("wins"),
+        t.get("points_for"),
     ), reverse=True)
 
     simulated_playoff_names = [s.get("name") for s in simulated_berth_redone[:6]]
@@ -422,29 +428,41 @@ for team in simulated_berth:
     # See if the leaders have changed
     # If it hasn't, find them in the playoff picture and update their name to indicate a division clinch
     for current_playoff in full_playoff_picture[:6]:
-        if team_name == current_playoff.get("name") and current_playoff.get("name") in simulated_playoff_names:
+        if team_name == current_playoff.get("name") and team_name in simulated_playoff_names:
             current_playoff["clinched"] = "* (clinched playoffs)"
 
     # Reset the sim
-    simulated_berth = deepcopy(standings)
+    team["losses"] = old_losses
+    team["points_for"] = old_points_for
+    for other_revert_name, other_revert_wins in other_old_wins.items():
+        for o_again in simulated_berth:
+            if o_again.get("name") == other_revert_name:
+                o_again["wins"] = other_revert_wins
 
 # Now see if anyone has a clinched a bye
 simulated_bye = deepcopy(standings)
 
-# See if any team has clinched a playoff berth
+# See if any team has clinched a bye
 for team in simulated_bye:
     team_name = team.get("name")
+    # Save the old values
+    old_losses = team.get("losses")
+    old_points_for = team.get("points_for")
     team["losses"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
     team["points_for"] = -1
-    # Set the other teams remaining games to wins
+
+    other_old_wins = {}
+    # Set the other teams' remaining games to wins
     for other_team in simulated_bye:
-        if other_team.get("name") != team_name:
+        other_name = other_team.get("name")
+        if other_name != team_name:
+            other_old_wins[other_name] = other_team.get("wins")
             other_team["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
 
     # Recalculate the standings for use below
-    simulated_bye_redone = sorted(simulated_bye, key=lambda team_data: (
-        team_data.get("wins"),
-        team_data.get("points_for"),
+    simulated_bye_redone = sorted(simulated_bye, key=lambda t: (
+        t.get("wins"),
+        t.get("points_for"),
     ), reverse=True)
 
     # Get the two top division leaders in the simulation
@@ -466,7 +484,12 @@ for team in simulated_bye:
             current_bye["clinched"] = "** (clinched bye)"
 
     # Reset the sim
-    simulated_bye = deepcopy(standings)
+    team["losses"] = old_losses
+    team["points_for"] = old_points_for
+    for other_revert_name, other_revert_wins in other_old_wins.items():
+        for o_again in simulated_berth:
+            if o_again.get("name") == other_revert_name:
+                o_again["wins"] = other_revert_wins
 
 # Save the regular season snapshot to a JSON file for use by the site
 snapshot_json_filename = f"{dir_path}/Playoff Snapshot.json"
