@@ -32,5 +32,5 @@ def clean_user_id(user_id: str) -> str:
     return MANAGER_DUPLICATES.get(cleaned, cleaned)
 
 
-def generate_team_id(espn_team_id: int, year: int) -> int:
+def generate_team_id(espn_team_id: str, year: int) -> int:
     return hash(f"{year}-{espn_team_id}")

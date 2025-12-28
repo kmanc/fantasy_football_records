@@ -222,6 +222,7 @@ class Team:
         self.name: str = name
         self.matchups: set[Matchup] = set()
         self.member: Member = member
+        self.playoff_wins_for_champ: int = 0
         self.regular_season_losses: int = 0
         self.regular_season_ties: int = 0
         self.regular_season_wins: int = 0
@@ -252,6 +253,10 @@ class Team:
         """Calculates the regular season points scored for a team"""
         return round(sum(matchup.points_for for matchup in self.matchups if matchup.type == GameType.REGULAR_SEASON), 2)
 
+    def update_playoff_wins_for_champ(self, wins):
+        """Set the team's required playoff wins to have been the champion"""
+        self.playoff_wins_for_champ = wins
+
     def update_regular_season_losses(self, losses):
         """Set the team's regular season losses"""
         self.regular_season_losses = losses
@@ -266,8 +271,5 @@ class Team:
 
     def won_championship(self):
         """Returns a boolean representing whether the team won the championship"""
-        if self.year <= self.member.league.max_completed_year:
-            last_game = sorted(self.matchups, key=lambda matchup: matchup.week, reverse=True)[0]
-            return last_game.type == GameType.PLAYOFF and last_game.outcome == GameOutcome.WIN
-        else:
-            return False
+        num_playoff_wins = len([game for game in self.matchups if game.type == GameType.PLAYOFF and game.outcome != GameOutcome.LOSS])
+        return num_playoff_wins == self.playoff_wins_for_champ

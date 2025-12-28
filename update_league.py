@@ -176,6 +176,8 @@ for api_year in api_years:
     # Chances are the name hasn't changed but on the off chance it has, update it
     fantasy_league.update_name(api_year.settings.name)
 
+    playoff_wins_for_champ = len(api_year.settings.matchup_periods) - api_year.settings.reg_season_count
+
     # Loop over the teams of the league that year and grab a few of their stats
     for team in api_year.teams:
         # Get the ESPN-assigned team ID
@@ -192,6 +194,7 @@ for api_year in api_years:
                         existing_team.update_regular_season_losses(team.losses)
                         existing_team.update_regular_season_ties(team.ties)
                         existing_team.update_regular_season_wins(team.wins)
+                        existing_team.update_playoff_wins_for_champ(playoff_wins_for_champ)
                         break
                 # If the loop completed without a break (IE there was no match to an existing member's teams)
                 # Add the new team to the member
@@ -203,6 +206,7 @@ for api_year in api_years:
                     team_object.update_regular_season_losses(team.losses)
                     team_object.update_regular_season_ties(team.ties)
                     team_object.update_regular_season_wins(team.wins)
+                    team_object.update_playoff_wins_for_champ(playoff_wins_for_champ)
                     member.add_team(team_object)
 
     # Figure out how far into the season we are
@@ -541,7 +545,7 @@ for sim_division_data in simulated_bye.values():
     # If they were not already in a top-two spot, set their remaining games to wins
     else:
         leader["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
-        leader["divisional_wins"] = 4 - other_player.get("divisional_losses")
+        leader["divisional_wins"] = 4 - leader.get("divisional_losses")
     # Set the other division teams remaining games to wins
     for other_player in sim_division_data:
         other_player["wins"] += (fantasy_league.active_year_regular_season_length - regular_season_games_played)
