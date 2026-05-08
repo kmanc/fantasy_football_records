@@ -4,7 +4,6 @@
 
 ### Setup
 
-- [Namecheap domain to Digital Ocean](https://www.namecheap.com/support/knowledgebase/article.aspx/10375/2208/how-do-i-link-a-domain-to-my-digitalocean-account/)
 - [Digital Ocean starter guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-22-04)
 - [Digital Ocean flask + nginx](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-uwsgi-and-nginx-on-ubuntu-22-04)
 
