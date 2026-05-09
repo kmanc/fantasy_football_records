@@ -1,0 +1,40 @@
+.table {
+    --bs-table-hover-bg: #eef4ff;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #495057;
+    padding: 0.65rem 0.75rem;
+}
+
+.table tbody td {
+    padding: 0.55rem 0.75rem;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.1s ease;
+}
+
+/* Right-align and tabular-num columns that look numeric.
+ * Heuristic: any cell after the first two text columns in the table_full /
+ * table_no_week / table_minimal / table_with_average templates is numeric. */
+.table td.numeric,
+.table th.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+#data tbody tr:nth-child(1) td:first-child {
+    font-weight: 600;
+}
