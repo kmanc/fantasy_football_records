@@ -1,45 +1,66 @@
-/* General navbar styling */
 .navbar {
-    padding: 0.5rem 1rem; /* Adjust navbar padding */
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-/* Navbar toggler customization */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
 .navbar-light .navbar-toggler {
-    border-color: #ccc; /* Subtle border for the toggler */
+    border-color: #ccc;
 }
 
-/* Center text in nav items */
 .navbar-nav .nav-item .nav-link {
     text-align: center;
-    display: block; /* Ensure block-level element for proper centering */
+    display: block;
 }
 
-/* Active (current) link styling */
 .nav-link.current-path {
-    font-weight: bold; /* Highlight the active page */
-    color: #007bff; /* Active color */
+    font-weight: 600;
+    color: #0d6efd;
 }
 
-/* Dropdown menu styling */
 .navbar-nav .dropdown-menu {
-    background-color: #f8f9fa; /* Matches Bootstrap's light background */
-    border-radius: 0.25rem; /* Consistent border-radius */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visibility */
+    background-color: #ffffff;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    padding: 0.35rem 0;
 }
 
 .navbar-nav .dropdown-menu .dropdown-item {
-    text-align: center; /* Center dropdown items */
+    padding: 0.4rem 1rem;
 }
 
 .navbar-nav .dropdown-menu .dropdown-item:hover {
-    background-color: #e9ecef; /* Light hover effect */
+    background-color: #f3f4f6;
 }
 
-/* Dropdown toggle button */
+.navbar-nav .dropdown-menu .dropdown-item.current-path {
+    color: #0d6efd;
+    font-weight: 600;
+    background-color: #eef4ff;
+}
+
+.dropdown-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    margin: 0;
+    padding: 0.25rem 1rem;
+}
+
+.dropdown-divider {
+    margin: 0.25rem 0;
+}
+
 .navbar-nav .nav-item .dropdown-toggle {
-    color: #343a40; /* Example: darker color for better visibility */
+    color: #343a40;
 }
 
 .navbar-nav .nav-item .dropdown-toggle:hover {
-    color: #007bff; /* Example: color change on hover */
+    color: #0d6efd;
 }

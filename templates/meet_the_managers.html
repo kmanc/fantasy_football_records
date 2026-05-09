@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
+{% block head %}
+<link href="{{ url_for('static', filename='meet_the_managers.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<!--
-  TODO we might want to make these images into SVGs
-    -I tried this and it didn't work as well as I hoped, the free PNG to SVG converters aren't great
--->
+<div class="managers-grid">
 {% for manager in managers %}
 <div class="manager-info-card">
     <h4>{{ manager['display_name'] }}</h4>
-    <!-- TODO maybe all this logic should just be moved to python? -->
     {% if os.path.exists(os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".jpg")) %}
     {% set src = os.path.join(meet_the_managers_assets, manager["key_name"] ~ ".jpg") %}
     {% else %}
@@ -20,10 +20,6 @@
     <p>{{ bios[manager['key_name']] }}</p>
 </div>
 {% endfor %}
+</div>
 
-{% endblock %}
-
-{% block scripts %}
-<!-- not technically a script but can add a new block for styles in the future -->
-<link href="{{ url_for('static', filename='meet_the_managers.css') }}" rel="stylesheet">
 {% endblock %}

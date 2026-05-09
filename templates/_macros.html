@@ -1,0 +1,11 @@
+{% macro rank_badge(n) -%}
+{%- if n == 1 -%}
+<span class="rank-badge medal gold">1</span>
+{%- elif n == 2 -%}
+<span class="rank-badge medal silver">2</span>
+{%- elif n == 3 -%}
+<span class="rank-badge medal bronze">3</span>
+{%- else -%}
+<span class="rank-badge">{{ n }}</span>
+{%- endif -%}
+{%- endmacro %}
