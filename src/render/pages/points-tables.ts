@@ -1,5 +1,5 @@
 import type { RenderContext } from "../context";
-import { renderTable, td, tr } from "../components/tables";
+import { cell, rankCell, RANK_COLUMN, renderTable } from "../components/tables";
 import { formatMemberForDisplay } from "../format-member";
 import { escapeHtml, formatPoints } from "../html";
 import { renderPage } from "../layout";
@@ -11,9 +11,14 @@ interface PointsRecord {
 }
 
 function renderPointsTable(ctx: RenderContext, currentPath: string, recordName: string, records: PointsRecord[]): string {
-  const rows = records.map((r) => tr([td(escapeHtml(r.member)), td(formatPoints(r.value), true), td(formatPoints(r.average), true)]));
+  const rows = records.map((r, i) => [
+    rankCell(i + 1),
+    cell(escapeHtml(r.member)),
+    cell(formatPoints(r.value), true),
+    cell(formatPoints(r.average), true),
+  ]);
   const content = renderTable(
-    [{ label: "Member" }, { label: "Value", numeric: true }, { label: "PPG", numeric: true }],
+    [RANK_COLUMN, { label: "Member", kind: "member" }, { label: "Value", numeric: true }, { label: "PPG", numeric: true }],
     rows,
   );
   return renderPage({ titlePrefix: ctx.titlePrefix, recordName, currentPath, members: ctx.members, content });

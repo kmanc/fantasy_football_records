@@ -1,6 +1,6 @@
 import type { Team } from "../../domain/model";
 import type { RenderContext } from "../context";
-import { renderTable, td, tr } from "../components/tables";
+import { cell, rankCell, RANK_COLUMN, renderTable } from "../components/tables";
 import { formatMemberForDisplay } from "../format-member";
 import { escapeHtml, formatPoints } from "../html";
 import { renderPage } from "../layout";
@@ -13,16 +13,21 @@ function renderSeasonTable(
   teams: Team[],
   value: (team: Team) => number,
 ): string {
-  const rows = teams.map((team) =>
-    tr([
-      td(escapeHtml(formatMemberForDisplay(ctx.league, team.member))),
-      td(escapeHtml(team.name)),
-      td(String(team.year), true),
-      td(formatPoints(value(team)), true),
-    ]),
-  );
+  const rows = teams.map((team, i) => [
+    rankCell(i + 1),
+    cell(escapeHtml(formatMemberForDisplay(ctx.league, team.member))),
+    cell(escapeHtml(team.name)),
+    cell(String(team.year), true),
+    cell(formatPoints(value(team)), true),
+  ]);
   const content = renderTable(
-    [{ label: "Member" }, { label: "Team Name" }, { label: "Year", numeric: true }, { label: "Points", numeric: true }],
+    [
+      RANK_COLUMN,
+      { label: "Member", kind: "member" },
+      { label: "Team Name", kind: "team" },
+      { label: "Year", numeric: true },
+      { label: "Points", numeric: true },
+    ],
     rows,
   );
   return renderPage({ titlePrefix: ctx.titlePrefix, recordName, currentPath, members: ctx.members, content });

@@ -1,26 +1,26 @@
 import { GameOutcome } from "../../domain/enums";
 import type { Matchup } from "../../domain/model";
 import type { RenderContext } from "../context";
-import { renderTable, td, tr } from "../components/tables";
+import { cell, rankCell, RANK_COLUMN, renderTable } from "../components/tables";
 import { formatMemberForDisplay } from "../format-member";
 import { escapeHtml, formatPoints } from "../html";
 import { renderPage } from "../layout";
 import { bottom9Reversed, top10 } from "../slicing";
 
 function renderWeekTable(ctx: RenderContext, currentPath: string, recordName: string, matchups: Matchup[]): string {
-  const rows = matchups.map((matchup) =>
-    tr([
-      td(escapeHtml(formatMemberForDisplay(ctx.league, matchup.team.member))),
-      td(escapeHtml(matchup.team.name)),
-      td(String(matchup.team.year), true),
-      td(String(matchup.week), true),
-      td(formatPoints(matchup.pointsFor), true),
-    ]),
-  );
+  const rows = matchups.map((matchup, i) => [
+    rankCell(i + 1),
+    cell(escapeHtml(formatMemberForDisplay(ctx.league, matchup.team.member))),
+    cell(escapeHtml(matchup.team.name)),
+    cell(String(matchup.team.year), true),
+    cell(String(matchup.week), true),
+    cell(formatPoints(matchup.pointsFor), true),
+  ]);
   const content = renderTable(
     [
-      { label: "Member" },
-      { label: "Team Name" },
+      RANK_COLUMN,
+      { label: "Member", kind: "member" },
+      { label: "Team Name", kind: "team" },
       { label: "Year", numeric: true },
       { label: "Week", numeric: true },
       { label: "Points", numeric: true },

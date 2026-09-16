@@ -1,20 +1,98 @@
+:root {
+    --turf: #1e4d3a;
+    --turf-dark: #12362a;
+    --turf-deep: #0b211a;
+    --brass: #b8862e;
+    --brass-light: #d8ae55;
+    --paper: #f2f4ef;
+    --surface: #ffffff;
+    --ink: #16211b;
+    --ink-soft: #5b6660;
+    --line: #dce1d8;
+    --medal-gold: #c9a227;
+    --medal-silver: #93a09a;
+    --medal-bronze: #a9683b;
+    --win-bg: #e3efe5;
+    --font-display: "Oswald", "Arial Narrow", sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 html, body {
     height: 100%;
     margin: 0;
+}
+
+body {
     display: flex;
     flex-direction: column;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display);
+    margin: 0;
+    text-wrap: balance;
+}
+
+a {
+    color: var(--turf);
 }
 
 .content {
     flex: 1;
 }
 
-.footer {
-    text-align: center;
-    padding: 10px 0;
-    color: black;
-    width: 100%;
-    position: relative;
-    bottom: 0;
-    margin-top: auto;
+.wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-inline: 1.25rem;
+}
+
+.page-head {
+    padding: 2.25rem 0 1.5rem;
+}
+
+.page-head h1 {
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.btn {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    padding: 0.7rem 1.3rem;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--brass);
+    color: #241a00;
+}
+
+.btn-primary:hover {
+    background: var(--brass-light);
+}
+
+:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 }

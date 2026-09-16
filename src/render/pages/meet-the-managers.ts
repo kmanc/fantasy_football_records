@@ -16,10 +16,9 @@ export function renderMeetTheManagers(ctx: RenderContext): string {
     .map((manager) => {
       const src = `/static/meet_the_managers/${manager.keyName}.jpg`;
       const fallback = "/static/meet_the_managers/default_manager.jpg";
-      return `<div class="manager-info-card">
-    <h4>${escapeHtml(manager.displayName)}</h4>
+      return `<div class="manager-card">
     <img alt="${escapeHtml(manager.displayName)}" src="${src}" onerror="this.onerror=null;this.src='${fallback}';">
-    <br>
+    <h4>${escapeHtml(manager.displayName)}</h4>
     <p>${escapeHtml(bios[manager.keyName] ?? "")}</p>
 </div>`;
     })

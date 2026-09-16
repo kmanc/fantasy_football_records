@@ -1,40 +1,133 @@
-.table {
-    --bs-table-hover-bg: #eef4ff;
-    border-collapse: separate;
-    border-spacing: 0;
+.table-wrap {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+    margin-bottom: 2.5rem;
 }
 
-.table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-size: 0.85rem;
+table.record-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table.record-table thead th {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #495057;
-    padding: 0.65rem 0.75rem;
+    color: var(--ink-soft);
+    text-align: left;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 2px solid var(--line);
+    background: var(--paper);
+    white-space: nowrap;
 }
 
-.table tbody td {
-    padding: 0.55rem 0.75rem;
-    vertical-align: middle;
-}
-
-.table tbody tr {
-    transition: background-color 0.1s ease;
-}
-
-/* Right-align and tabular-num columns that look numeric.
- * Heuristic: any cell after the first two text columns in the table_full /
- * table_no_week / table_minimal / table_with_average templates is numeric. */
-.table td.numeric,
-.table th.numeric {
+table.record-table thead th.numeric {
     text-align: right;
+}
+
+table.record-table td {
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+table.record-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+table.record-table tbody tr:hover {
+    background: var(--win-bg);
+}
+
+table.record-table td.numeric {
+    text-align: right;
+    font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
 }
 
-#data tbody tr:nth-child(1) td:first-child {
+table.record-table td.col-member {
+    font-family: var(--font-display);
+    font-weight: 500;
+}
+
+table.record-table td.col-team {
+    color: var(--ink-soft);
+    font-style: italic;
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
     font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--paper);
+    font-variant-numeric: tabular-nums;
+}
+
+.rank-badge.gold {
+    background: var(--medal-gold);
+    color: #241a00;
+}
+
+.rank-badge.silver {
+    background: var(--medal-silver);
+    color: #182018;
+}
+
+.rank-badge.bronze {
+    background: var(--medal-bronze);
+    color: #fff;
+}
+
+@media (max-width: 640px) {
+    table.record-table thead {
+        display: none;
+    }
+
+    table.record-table, table.record-table tbody, table.record-table tr, table.record-table td {
+        display: block;
+        width: 100%;
+    }
+
+    table.record-table tr {
+        border-bottom: 1px solid var(--line);
+        padding: 0.6rem 0.9rem 0.7rem;
+    }
+
+    table.record-table td {
+        border: none;
+        padding: 0.2rem 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.92rem;
+    }
+
+    table.record-table td.col-rank {
+        justify-content: flex-start;
+        padding-bottom: 0.4rem;
+    }
+
+    table.record-table td::before {
+        content: attr(data-label);
+        color: var(--ink-soft);
+        font-family: var(--font-display);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    table.record-table td.col-rank::before {
+        content: "";
+    }
 }

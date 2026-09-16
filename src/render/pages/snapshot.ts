@@ -1,20 +1,29 @@
 import type { PlayoffPictureEntry } from "../../domain/playoff-snapshot";
 import type { RenderContext } from "../context";
-import { renderTable, td, tr } from "../components/tables";
+import { cell, renderTable, type TableCell } from "../components/tables";
 import { escapeHtml } from "../html";
 import { renderPage } from "../layout";
 
-function teamCell(entry: PlayoffPictureEntry | undefined): string {
-  return escapeHtml(entry?.name ?? "");
+/** playoff-snapshot.ts encodes the clinch marker and its label together, e.g. "* (clinched division)"
+ * or "** (clinched bye)"; the bracket/table just need the marker, the legend spells out what it means. */
+function clinchMark(clinched: string | undefined): string {
+  return clinched?.split(" ")[0] ?? "";
+}
+
+function teamLabel(entry: PlayoffPictureEntry | undefined): string {
+  if (!entry?.name) return "";
+  const mark = clinchMark(entry.clinched);
+  const markHtml = mark ? ` <span class="clinch-mark">${escapeHtml(mark)}</span>` : "";
+  return `${escapeHtml(entry.name)}${markHtml}`;
 }
 
 function isWinner(entry: PlayoffPictureEntry | undefined, advancedTo: PlayoffPictureEntry | undefined): boolean {
   return Boolean(entry?.name && advancedTo?.name && entry.name === advancedTo.name);
 }
 
-function teamDiv(entry: PlayoffPictureEntry | undefined, advancedTo: PlayoffPictureEntry | undefined, extraClass = ""): string {
+function teamDiv(entry: PlayoffPictureEntry | undefined, advancedTo: PlayoffPictureEntry | undefined): string {
   const winnerClass = isWinner(entry, advancedTo) ? " winner" : "";
-  return `<div class="team${winnerClass}${extraClass}">${teamCell(entry)}</div>`;
+  return `<div class="team${winnerClass}">${teamLabel(entry)}</div>`;
 }
 
 function renderBracket(seeds: PlayoffPictureEntry[]): string {
@@ -56,7 +65,7 @@ function renderBracket(seeds: PlayoffPictureEntry[]): string {
     </ul>
     <ul class="round round-4 round-final" data-label="Champion">
         <li class="game">
-            <div class="team champ">${teamCell(s[18])}</div>
+            <div class="team champ">${escapeHtml(s[18]?.name ?? "")}</div>
         </li>
     </ul>
 </div>`;
@@ -64,19 +73,23 @@ function renderBracket(seeds: PlayoffPictureEntry[]): string {
 
 export function renderSnapshot(ctx: RenderContext, seeds: PlayoffPictureEntry[], teamCount: number): string {
   const records = seeds.slice(0, teamCount);
-  const rows = records.map((record) =>
-    tr([
-      td(record.seed !== undefined ? escapeHtml(String(record.seed)) : "", true),
-      td(`${escapeHtml(record.name)}${escapeHtml(record.clinched ?? "")}`),
-      td(`${record.wins ?? ""} - ${record.losses ?? ""}`, true),
-      td(record.pointsFor !== undefined ? String(record.pointsFor) : "", true),
-      td(record.pointsOut !== undefined ? String(record.pointsOut) : "", true),
-    ]),
-  );
+  const rows: TableCell[][] = records.map((record) => {
+    const mark = clinchMark(record.clinched);
+    const nameHtml = mark
+      ? `${escapeHtml(record.name)} <span class="clinch-mark">${escapeHtml(mark)}</span>`
+      : escapeHtml(record.name);
+    return [
+      cell(record.seed !== undefined ? escapeHtml(String(record.seed)) : "—", true),
+      cell(nameHtml),
+      cell(`${record.wins ?? ""}–${record.losses ?? ""}`, true),
+      cell(record.pointsFor !== undefined ? String(record.pointsFor) : "", true),
+      cell(record.pointsOut !== undefined ? String(record.pointsOut) : "—", true),
+    ];
+  });
   const table = renderTable(
     [
       { label: "Seed", numeric: true },
-      { label: "Team Name" },
+      { label: "Team", kind: "team" },
       { label: "Record", numeric: true },
       { label: "Points For", numeric: true },
       { label: "Points Out", numeric: true },
@@ -84,9 +97,26 @@ export function renderSnapshot(ctx: RenderContext, seeds: PlayoffPictureEntry[],
     rows,
   );
 
-  const content = `${renderBracket(seeds)}
-<div>
-    ${table}
+  const content = `<section class="hero-snapshot">
+    <div class="wrap">
+        <h1>${ctx.league.activeYear} playoff picture</h1>
+        <p>Standings if the season ended today.</p>
+    </div>
+</section>
+
+<div class="wrap">
+    <section class="bracket-section">
+        ${renderBracket(seeds)}
+        <ul class="legend">
+            <li><span class="clinch-mark">*</span> Clinched division</li>
+            <li><span class="clinch-mark">**</span> Clinched first-round bye</li>
+        </ul>
+    </section>
+
+    <section class="standings-section">
+        <h2>Full standings</h2>
+        ${table}
+    </section>
 </div>`;
 
   return renderPage({
@@ -95,6 +125,7 @@ export function renderSnapshot(ctx: RenderContext, seeds: PlayoffPictureEntry[],
     currentPath: "/snapshot",
     members: ctx.members,
     content,
+    heading: false,
     extraHeadLinks: ["/static/bracket.css"],
   });
 }

@@ -47,18 +47,17 @@ function renderNavbar(titlePrefix: string, members: string[], currentPath: strin
     const itemsHtml = group.items
       .map(
         (item) => `<li>
-    <a class="dropdown-item ${currentPath === item.url ? "current-path" : ""}" href="${item.url}">${escapeHtml(item.name)}</a>
+    <a class="${currentPath === item.url ? "current-path" : ""}" href="${item.url}">${escapeHtml(item.name)}</a>
 </li>`,
       )
       .join("\n");
-    return `<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle ${groupActive ? "current-path" : ""}" href="#" id="navbarDropdown${index + 1}"
-       role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        ${escapeHtml(group.label)}
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdown${index + 1}">
-        ${itemsHtml}
-    </ul>
+    return `<li class="has-dropdown">
+    <details${groupActive ? " open" : ""}>
+        <summary>${escapeHtml(group.label)}</summary>
+        <ul class="dropdown-menu">
+            ${itemsHtml}
+        </ul>
+    </details>
 </li>`;
   }).join("\n");
 
@@ -66,45 +65,55 @@ function renderNavbar(titlePrefix: string, members: string[], currentPath: strin
   const h2hItemsHtml = members
     .map(
       (member) => `<li>
-    <a class="dropdown-item ${currentPath === `/head-to-head/${member}` ? "current-path" : ""}" href="/head-to-head/${encodeURIComponent(member)}">${escapeHtml(member)}</a>
+    <a class="${currentPath === `/head-to-head/${member}` ? "current-path" : ""}" href="/head-to-head/${encodeURIComponent(member)}">${escapeHtml(member)}</a>
 </li>`,
     )
     .join("\n");
 
-  return `<link href="/static/navbar.css" rel="stylesheet">
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/">${escapeHtml(titlePrefix || "Records")}</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link ${currentPath === "/snapshot" ? "current-path" : ""}" href="/snapshot">Standings</a>
-                </li>
+  return `<header class="site-header">
+    <div class="site-header-bar">
+        <a class="brand" href="/">${escapeHtml(titlePrefix || "Records")}</a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-input">
+        <label for="nav-toggle" class="nav-toggle-btn" aria-label="Toggle navigation">
+            <span class="bars"><span></span><span></span><span></span></span>
+        </label>
+        <nav class="site-nav" aria-label="Primary">
+            <ul>
+                <li><a class="${currentPath === "/snapshot" ? "current-path" : ""}" href="/snapshot">Standings</a></li>
 
                 ${groupsHtml}
 
-                <li class="nav-item">
-                    <a class="nav-link ${currentPath === "/meet_the_managers" ? "current-path" : ""}" href="/meet_the_managers">Meet the managers</a>
-                </li>
+                <li><a class="${currentPath === "/meet_the_managers" ? "current-path" : ""}" href="/meet_the_managers">Meet the managers</a></li>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle ${onH2hPage ? "current-path" : ""}" href="#" id="navbarDropdownH2H"
-                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Head-to-head
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownH2H">
-                        ${h2hItemsHtml}
-                    </ul>
+                <li class="has-dropdown">
+                    <details${onH2hPage ? " open" : ""}>
+                        <summary>Head-to-head</summary>
+                        <ul class="dropdown-menu">
+                            ${h2hItemsHtml}
+                        </ul>
+                    </details>
                 </li>
             </ul>
-        </div>
+        </nav>
     </div>
-</nav>`;
+</header>`;
 }
+
+/** Native <details> don't close on an outside click; this closes any open nav dropdown when
+ * the user clicks elsewhere or hits Escape. The nav is fully usable without it. */
+const NAV_CLOSE_SCRIPT = `<script>
+document.addEventListener("click", function (event) {
+    document.querySelectorAll(".site-nav details[open]").forEach(function (details) {
+        if (!details.contains(event.target)) details.removeAttribute("open");
+    });
+});
+document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    document.querySelectorAll(".site-nav details[open]").forEach(function (details) {
+        details.removeAttribute("open");
+    });
+});
+</script>`;
 
 export interface PageChrome {
   titlePrefix: string;
@@ -112,42 +121,48 @@ export interface PageChrome {
   currentPath: string;
   members: string[];
   content: string;
+  /** Set false when `content` supplies its own <h1>/hero (home, snapshot) instead of the shared page-head. */
+  heading?: boolean;
   extraHeadLinks?: string[];
 }
 
 export function renderPage(chrome: PageChrome): string {
   const extraLinks = (chrome.extraHeadLinks ?? []).map((href) => `<link href="${href}" rel="stylesheet">`).join("\n");
+  const showHeading = chrome.heading ?? true;
+  // Pages with a custom hero (heading: false) own their own <h1> and .wrap sections, so a
+  // snapshot-style hero band can run full-bleed edge to edge above the constrained content.
+  const body = showHeading
+    ? `<div class="wrap page-head">
+                <h1>${escapeHtml(chrome.recordName)}</h1>
+            </div>
+            <div class="wrap">
+                ${chrome.content}
+            </div>`
+    : chrome.content;
 
   return `<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
         <link href="/static/base.css" rel="stylesheet">
+        <link href="/static/navbar.css" rel="stylesheet">
         <link href="/static/tables.css" rel="stylesheet">
-        <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" rel="stylesheet">
-        <script crossorigin="anonymous"
-                integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-                src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <title>${escapeHtml(chrome.titlePrefix)}: ${escapeHtml(chrome.recordName)}</title>
         ${extraLinks}
     </head>
     <body>
         ${renderNavbar(chrome.titlePrefix, chrome.members, chrome.currentPath)}
 
-        <div class="container recordname">
-            <h1 align="center">${escapeHtml(chrome.recordName)}</h1>
-            <hr>
-        </div>
+        <main class="content">
+            ${body}
+        </main>
 
-        <div class="container content">
-            ${chrome.content}
-        </div>
-
-        <div class="footer">
-            Updated weekly by <a href="https://github.com/kmanc/fantasy_football_records">fantasy_football_records</a>
-        </div>
+        ${NAV_CLOSE_SCRIPT}
     </body>
 </html>`;
 }
