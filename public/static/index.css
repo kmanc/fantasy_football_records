@@ -1,0 +1,145 @@
+.home-hero {
+    display: flex;
+    align-items: center;
+    gap: 2.25rem;
+    padding: 3.5rem 0 2.5rem;
+    max-width: 48rem;
+}
+
+.home-hero-mark {
+    flex: 0 0 auto;
+    width: 116px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(11, 26, 43, 0.14);
+}
+
+.home-hero-text {
+    max-width: 32rem;
+}
+
+.home-hero h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--turf-dark);
+    line-height: 1.08;
+}
+
+.home-hero p {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    margin: 1rem 0 1.6rem;
+    line-height: 1.5;
+}
+
+.timeline-section {
+    padding: 1rem 0 3rem;
+}
+
+.timeline-section h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 1.4rem;
+}
+
+.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+.timeline::before {
+    content: "";
+    position: absolute;
+    left: 4.6rem;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    width: 2px;
+    background: var(--line);
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1.4rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-year {
+    flex: 0 0 3.4rem;
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--turf);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.05rem;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: calc(4.6rem - 0.3rem);
+    top: 0.35rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--brass);
+    box-shadow: 0 0 0 3px var(--paper);
+}
+
+.timeline-body {
+    padding-left: 1.1rem;
+    min-width: 0;
+}
+
+.timeline-body h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    color: #1f2937;
+}
+
+.timeline-body p {
+    margin: 0;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    font-size: 0.96rem;
+}
+
+@media (max-width: 640px) {
+    .home-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .home-hero-mark {
+        width: 84px;
+    }
+
+    .timeline-item {
+        gap: 1rem;
+    }
+
+    .timeline-year {
+        flex: 0 0 3rem;
+        font-size: 0.95rem;
+    }
+
+    .timeline::before {
+        left: 4rem;
+    }
+
+    .timeline-item::before {
+        left: calc(4rem - 0.3rem);
+    }
+
+    .timeline-body {
+        padding-left: 0.875rem;
+    }
+}

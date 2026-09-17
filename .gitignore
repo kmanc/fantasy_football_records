@@ -1,11 +1,21 @@
 # Directories
-venv/
 .idea/
 .vscode/
-__pycache__/
+node_modules/
+.wrangler/
 
-# Files
+# Files (legacy Flask app artifacts, kept ignored in case they still exist on disk locally)
 config.ini
 *.pickle
 *.json
 .DS_Store
+.dev.vars
+
+# JSON exceptions (data files that must be tracked)
+!package.json
+!tsconfig.json
+!package-lock.json
+!public/static/meet_the_managers/manager_bios.json
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

@@ -1,0 +1,214 @@
+.site-header {
+    background: var(--turf-dark);
+    color: #f4f6f1;
+    border-bottom: 3px solid var(--brass);
+    position: relative;
+    z-index: 30;
+}
+
+.site-header-bar {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0.7rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+}
+
+.brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.brand .accent {
+    color: var(--brass-light);
+}
+
+.nav-toggle-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nav-toggle-btn {
+    display: none;
+    margin-left: auto;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.nav-toggle-btn .bars {
+    position: relative;
+    width: 1.1rem;
+    height: 0.8rem;
+}
+
+.nav-toggle-btn .bars span {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+.nav-toggle-btn .bars span:nth-child(1) { top: 0; }
+.nav-toggle-btn .bars span:nth-child(2) { top: 0.36rem; }
+.nav-toggle-btn .bars span:nth-child(3) { top: 0.72rem; }
+
+.site-nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+}
+
+.site-nav a, .site-nav summary {
+    display: block;
+    padding: 0.55rem 0.7rem;
+    color: #e7ebe4;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.site-nav summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.site-nav summary::-webkit-details-marker {
+    display: none;
+}
+
+.site-nav summary::after {
+    content: "\25be";
+    font-size: 0.7em;
+    opacity: 0.8;
+}
+
+.site-nav a:hover, .site-nav summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.site-nav a.current-path {
+    color: var(--brass-light);
+    font-weight: 600;
+}
+
+.site-nav li.has-dropdown {
+    position: relative;
+}
+
+.site-nav details[open] summary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.site-nav .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    min-width: 15rem;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(11, 33, 26, 0.22);
+    padding: 0.4rem;
+    list-style: none;
+    margin: 0;
+    z-index: 40;
+    max-height: 60vh;
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.site-nav .dropdown-menu a {
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 5px;
+}
+
+.site-nav .dropdown-menu a:hover {
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.site-nav .dropdown-menu a.current-path {
+    color: var(--turf);
+    background: var(--win-bg);
+    font-weight: 600;
+}
+
+@media (max-width: 880px) {
+    .nav-toggle-btn {
+        display: inline-flex;
+    }
+
+    .site-nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--turf-dark);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 0.5rem 1rem 1rem;
+    }
+
+    .nav-toggle-input:checked ~ .site-nav {
+        display: block;
+    }
+
+    .site-nav ul {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.1rem;
+    }
+
+    .site-nav .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        border: none;
+        background: rgba(0, 0, 0, 0.15);
+        color: #f4f6f1;
+        margin: 0.15rem 0 0.4rem;
+        max-height: none;
+    }
+
+    .site-nav .dropdown-menu a {
+        color: #e7ebe4;
+    }
+
+    .site-nav .dropdown-menu a:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .site-nav .dropdown-menu a.current-path {
+        background: rgba(216, 174, 85, 0.18);
+        color: var(--brass-light);
+    }
+}

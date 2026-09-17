@@ -1,0 +1,18 @@
+{
+  "name": "fantasy-football-records",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "backfill-cache": "bun run scripts/backfill-season-cache.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260916.1",
+    "bun-types": "^1.4.2",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.132.0"
+  }
+}

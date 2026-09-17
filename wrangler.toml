@@ -1,0 +1,25 @@
+name = "fantasy-football-records"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+
+[triggers]
+# Weekly update, Tuesday mornings (matches the old crontab.sample: 0 12 * * TUE UTC)
+crons = ["0 12 * * TUE"]
+
+[assets]
+directory = "./public"
+
+[[kv_namespaces]]
+binding = "WAFFL_LEAGUE_KV"
+# Replace with the id printed by `wrangler kv namespace create WAFFL_LEAGUE_KV`
+id = "c0dec5d686a645868c046a9edb8b1196"
+
+[vars]
+LEAGUE_ID = 86591
+LEAGUE_FOUNDED = 2014
+LEAGUE_NAME = "Walpole Fantasy Football League"
+LEAGUE_ABBREVIATION = "WaFFL"
+
+# Secrets (not set here): ESPN_S2, ESPN_SWID
+# Set with `wrangler secret put ESPN_S2` / `wrangler secret put ESPN_SWID`
+# For local dev, put them in .dev.vars instead (see .dev.vars.sample)
