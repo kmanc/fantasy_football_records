@@ -7,6 +7,10 @@ fetches the season from ESPN's fantasy API, recomputes every record, and writes 
 HTML for every page into Workers KV. Every other request is just a KV read - no database, no
 per-request computation, no separate build/deploy pipeline.
 
+Completed seasons are cached in KV forever (`src/espn/season-cache.ts`) so a normal run only
+re-fetches the current, still-in-progress season from ESPN - otherwise a full rebuild would need
+far more than the ~50 ESPN requests a single Workers-free-tier invocation is allowed to make.
+
 ### Local development
 
 This project uses [Bun](https://bun.sh) for local dev/tests and [Wrangler](https://developers.cloudflare.com/workers/wrangler/)
@@ -32,17 +36,26 @@ To run the whole thing locally (Miniflare-emulated KV, no Cloudflare account nee
 
 ```
 bunx wrangler login
-bunx wrangler kv namespace create LEAGUE_KV
+bunx wrangler kv namespace create WAFFL_LEAGUE_KV
 # paste the printed id into wrangler.toml's [[kv_namespaces]] id field
+bun run backfill-cache   # one-time: primes the KV cache for every already-completed season
 bunx wrangler secret put ESPN_S2
 bunx wrangler secret put ESPN_SWID
 bunx wrangler deploy
 ```
 
-Then, once, trigger the scheduled handler manually (Cloudflare dashboard -> Workers -> this
-worker -> Triggers -> "Trigger cron" for the schedule, or `wrangler triggers`) so KV is
-populated before anyone visits. After that it updates itself every Tuesday morning per the
-`crons` schedule in `wrangler.toml`.
+Then, once, trigger the scheduled handler manually so KV is populated before anyone visits (the
+Cloudflare dashboard's Workers -> this worker -> Triggers -> "Trigger cron" button is the normal
+way to do this - see the note below if it doesn't work). After that it updates itself every
+Tuesday morning per the `crons` schedule in `wrangler.toml`.
+
+**Known issue:** as of September 2026, Cloudflare has an active platform bug where Cron Triggers
+on new accounts don't fire - neither the real schedule nor the dashboard's manual "Trigger cron"
+button ([community reports](https://community.cloudflare.com/t/newly-created-workers-cron-triggers-not-firing/392501)).
+If that's still the case, `src/worker.ts` has a temporary `/__admin/trigger-update?key=...`
+route (guarded by an `ADMIN_TRIGGER_KEY` secret you set the same way as the ESPN secrets above)
+that runs the same rebuild over a plain HTTP request as a workaround. Remove that route and
+secret once Cloudflare's Cron Triggers are confirmed working again.
 
 To put it on the real domain, add a Custom Domain / Route for `walpolefantasyfootball.com` to
 this Worker in the Cloudflare dashboard once DNS for that domain is on Cloudflare.

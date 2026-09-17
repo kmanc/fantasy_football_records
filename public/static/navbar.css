@@ -140,6 +140,8 @@
     z-index: 40;
     max-height: 60vh;
     overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
 }
 
 .site-nav .dropdown-menu a {

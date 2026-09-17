@@ -75,7 +75,6 @@ export function renderHome(ctx: RenderContext, leagueName: string): string {
         <div class="home-hero-text">
             <h1>${escapeHtml(leagueName)}</h1>
             <p>The league's online record book &mdash; every championship, every blowout, every Pooper Bowl, since 2014.</p>
-            <a class="btn btn-primary" href="/snapshot">See this week's playoff picture</a>
         </div>
     </section>
 

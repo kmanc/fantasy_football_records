@@ -36,7 +36,7 @@
     padding: 0;
     margin: 0;
     flex: 1 1 0;
-    min-width: 11.5rem;
+    min-width: 15rem;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -65,24 +65,25 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 0.5rem 0.7rem;
+    padding: 0.5rem;
     box-shadow: 0 2px 6px rgba(11, 33, 26, 0.06);
     text-align: left;
     box-sizing: border-box;
-    position: relative;
 }
 
 .team {
-    padding: 0.4rem 0.55rem;
+    padding: 0.4rem 0.35rem;
     background: var(--paper);
     border-radius: 4px;
     min-height: 1.8rem;
-    font-size: 0.92rem;
+    font-size: 0.83rem;
     line-height: 1.25;
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    word-wrap: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .team:empty::before {

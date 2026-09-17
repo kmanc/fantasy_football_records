@@ -1,44 +1,27 @@
 import type { EspnCredentials } from "../espn/client";
-import { EspnInvalidLeagueError, getLeaguePayload, getScoreboard, getWeeklyMatchupRosters, getWeeklyRoster } from "../espn/client";
-import type { EspnLeaguePayload, EspnMatchupRosterEntry } from "../espn/types";
+import { isSeasonFinal, loadOrFetchSeason, type FetchedSeasonData, type SeasonCacheStore } from "../espn/season-cache";
+import type { EspnMatchupRosterPayload, EspnRosterPayload } from "../espn/types";
 import { GameOutcome, GameType, type PlayerPosition } from "./enums";
 import { FantasyLeague, Matchup, Member, Player, Team } from "./model";
 import { cleanMemberName, cleanTeamName, cleanUserId, generateTeamId } from "./utility";
 
 const CONSOLATION_MATCHUP_TYPES = new Set(["LOSERS_CONSOLATION_LADDER", "WINNERS_CONSOLATION_LADDER"]);
 
-function computeCurrentWeek(year: number, payload: EspnLeaguePayload): number {
-  if (year < 2018) return payload.scoringPeriodId;
-  return payload.scoringPeriodId <= payload.status.finalScoringPeriod
-    ? payload.scoringPeriodId
-    : payload.status.finalScoringPeriod;
-}
-
-/** Player rosters/points are only available for 2018+; a fetch failure degrades to "no lineup data" rather than failing the whole build. */
-async function fetchPlayerData(creds: EspnCredentials, year: number, week: number): Promise<Map<number, Player[]>> {
+/** Player rosters/points are only available for 2018+ and only for weeks season-cache actually fetched. */
+function mergePlayerData(
+  rosterPayload: EspnRosterPayload | undefined,
+  matchupRosterPayload: EspnMatchupRosterPayload | undefined,
+): Map<number, Player[]> {
   const output = new Map<number, Player[]>();
-  if (year < 2018) return output;
+  if (!rosterPayload || !matchupRosterPayload) return output;
 
-  let scheduledEntries: EspnMatchupRosterEntry[];
-  let rosterTeams: Awaited<ReturnType<typeof getWeeklyRoster>>["teams"];
-  try {
-    const [rosterPayload, matchupRosterPayload] = await Promise.all([
-      getWeeklyRoster(creds, year, week),
-      getWeeklyMatchupRosters(creds, year, week),
-    ]);
-    rosterTeams = rosterPayload.teams;
-    scheduledEntries = matchupRosterPayload.schedule.flatMap((game) => [
-      ...(game.home?.rosterForCurrentScoringPeriod?.entries ?? []),
-      ...(game.away?.rosterForCurrentScoringPeriod?.entries ?? []),
-    ]);
-  } catch (err) {
-    console.warn(`Failed to fetch player data for ${year} week ${week}:`, err);
-    return output;
-  }
-
+  const scheduledEntries = matchupRosterPayload.schedule.flatMap((game) => [
+    ...(game.home?.rosterForCurrentScoringPeriod?.entries ?? []),
+    ...(game.away?.rosterForCurrentScoringPeriod?.entries ?? []),
+  ]);
   const scheduledByPlayerId = new Map(scheduledEntries.map((entry) => [entry.playerId, entry]));
 
-  for (const team of rosterTeams) {
+  for (const team of rosterPayload.teams) {
     const players: Player[] = [];
     for (const entry of team.roster.entries) {
       const scheduled = scheduledByPlayerId.get(entry.playerId);
@@ -72,7 +55,12 @@ export interface BuildLeagueResult {
   currentWeek: number;
 }
 
-export async function buildLeague(creds: EspnCredentials, foundedYear: number, currentCalendarYear: number): Promise<BuildLeagueResult> {
+export async function buildLeague(
+  store: SeasonCacheStore,
+  creds: EspnCredentials,
+  foundedYear: number,
+  currentCalendarYear: number,
+): Promise<BuildLeagueResult> {
   const league = new FantasyLeague(foundedYear, creds.leagueId);
   const teamsByKey = new Map<string, Team>();
   const placeholderMember = new Member("__bye__", "");
@@ -80,41 +68,35 @@ export async function buildLeague(creds: EspnCredentials, foundedYear: number, c
 
   interface FetchedYear {
     year: number;
-    payload: EspnLeaguePayload;
-    currentWeek: number;
-    totalMatchupPeriods: number;
+    data: FetchedSeasonData;
   }
   const fetchedYears: FetchedYear[] = [];
 
   for (let year = foundedYear; year <= currentCalendarYear; year++) {
-    let payload: EspnLeaguePayload;
-    try {
-      payload = await getLeaguePayload(creds, year);
-    } catch (err) {
-      // Most likely just means the fantasy football year hasn't started for this calendar year yet.
-      if (err instanceof EspnInvalidLeagueError) continue;
-      throw err;
-    }
-
-    const currentWeek = computeCurrentWeek(year, payload);
-    const totalMatchupPeriods = Object.keys(payload.settings.scheduleSettings.matchupPeriods).length;
+    // Completed seasons are cached forever in KV; only an in-progress season is fetched from ESPN
+    // fresh every run (keeps this well under the Workers-free-tier subrequest cap per invocation).
+    const data = await loadOrFetchSeason(store, creds, year);
+    // A null result most likely just means the fantasy football year hasn't started for this
+    // calendar year yet.
+    if (!data) continue;
 
     league.updateActiveYear(year);
-    if (currentWeek >= totalMatchupPeriods) {
+    if (isSeasonFinal(data)) {
       league.updateMaxCompletedYear(year);
     }
-    fetchedYears.push({ year, payload, currentWeek, totalMatchupPeriods });
+    fetchedYears.push({ year, data });
   }
 
   const lastYear = fetchedYears.at(-1);
   if (!lastYear) {
     throw new Error(`No seasons could be fetched for league ${creds.leagueId} from ${foundedYear} onward`);
   }
-  league.activeYearPlayoffSlots = lastYear.payload.settings.scheduleSettings.playoffTeamCount;
-  league.activeYearRegularSeasonLength = lastYear.payload.settings.scheduleSettings.matchupPeriodCount;
-  league.name = lastYear.payload.settings.name;
+  league.activeYearPlayoffSlots = lastYear.data.payload.settings.scheduleSettings.playoffTeamCount;
+  league.activeYearRegularSeasonLength = lastYear.data.payload.settings.scheduleSettings.matchupPeriodCount;
+  league.name = lastYear.data.payload.settings.name;
 
-  for (const { year, payload, currentWeek, totalMatchupPeriods } of fetchedYears) {
+  for (const { year, data } of fetchedYears) {
+    const { payload, scoreboard, currentWeek, totalMatchupPeriods, weeklyRosters, weeklyMatchupRosters } = data;
     // Members
     for (const rawMember of payload.members) {
       const name = cleanMemberName(`${rawMember.firstName ?? ""} ${rawMember.lastName ?? ""}`);
@@ -163,7 +145,6 @@ export async function buildLeague(creds: EspnCredentials, foundedYear: number, c
 
     // Matchups
     const maxWeek = Math.min(totalMatchupPeriods, currentWeek);
-    const scoreboard = await getScoreboard(creds, year);
 
     for (let week = 1; week <= maxWeek; week++) {
       const weekMatchups = scoreboard.schedule.filter((m) => m.matchupPeriodId === week);
@@ -171,7 +152,7 @@ export async function buildLeague(creds: EspnCredentials, foundedYear: number, c
       const allZero = weekMatchups.every((m) => (m.home?.totalPoints ?? 0) === 0 && (m.away?.totalPoints ?? 0) === 0);
       if (allZero) continue;
 
-      const playerData = await fetchPlayerData(creds, year, week);
+      const playerData = mergePlayerData(weeklyRosters[week], weeklyMatchupRosters[week]);
 
       for (const rawMatchup of weekMatchups) {
         const tierType = rawMatchup.playoffTierType ?? "NONE";
@@ -203,5 +184,5 @@ export async function buildLeague(creds: EspnCredentials, foundedYear: number, c
     }
   }
 
-  return { league, currentWeek: lastYear.currentWeek };
+  return { league, currentWeek: lastYear.data.currentWeek };
 }

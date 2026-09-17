@@ -10,9 +10,9 @@ crons = ["0 12 * * TUE"]
 directory = "./public"
 
 [[kv_namespaces]]
-binding = "LEAGUE_KV"
-# Replace with the id printed by `wrangler kv namespace create LEAGUE_KV`
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+binding = "WAFFL_LEAGUE_KV"
+# Replace with the id printed by `wrangler kv namespace create WAFFL_LEAGUE_KV`
+id = "c0dec5d686a645868c046a9edb8b1196"
 
 [vars]
 LEAGUE_ID = 86591

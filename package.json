@@ -6,7 +6,8 @@
     "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "backfill-cache": "bun run scripts/backfill-season-cache.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260916.1",
