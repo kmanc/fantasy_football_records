@@ -16,7 +16,7 @@ const TIMELINE_ITEMS: Array<{ year: string; title: string; body: string }> = [
 
 /** The league's own seal (public/favicon.svg), inlined so it can sit large and crisp in the hero
  * without an extra network request for what's otherwise a small favicon-sized asset. */
-const SEAL_MARK = `<svg class="home-hero-mark" viewBox="0 0 504 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WaFFL seal">
+const SEAL_MARK = `<svg class="home-hero-mark" viewBox="0 0 504 352" width="504" height="352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WaFFL seal">
     <rect x="0" y="0" width="504" height="352" fill="#ffffff"/>
     <path d="M9,40 C50,14 110,1 172,4 C205,5 225,11 250,18 C275,11 295,5 328,4 C390,1 450,14 493,40 L493,335 C493,341 489,345 483,345 L19,345 C13,345 9,341 9,335 Z" fill="#ffffff" stroke="#000000" stroke-width="3" stroke-linejoin="round"/>
     <path d="M9,40 C50,14 110,1 172,4 C205,5 225,11 250,18 C275,11 295,5 328,4 C390,1 450,14 493,40 L493,54 C450,28 390,15 328,18 C295,19 275,25 250,32 C225,25 205,19 172,18 C110,15 50,28 9,54 Z" fill="#cccccc" stroke="#000000" stroke-width="2" stroke-linejoin="round"/>
